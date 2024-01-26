@@ -65,7 +65,6 @@ public class AuthResource {
     @Path("/readiness")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfiguration() throws Exception {
-        System.out.println("READINESS REQUEST RECIEVED 2");
         List<HealthCheckResponse> list = List.of(
                 infinispanService.call(),
                 kubernetesService.call(),
