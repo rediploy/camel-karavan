@@ -64,10 +64,12 @@ public class CodeService {
     public static final String PROJECT_DEPLOYMENT_JKUBE_FILENAME = "deployment" + PROJECT_JKUBE_EXTENSION;
     private static final String SNIPPETS_PATH = "/snippets/";
     private static final String DATA_FOLDER = System.getProperty("user.dir") + File.separator + "data";
-    private static final int INTERNAL_PORT = 8080;
 
     @ConfigProperty(name = "karavan.environment")
     String environment;
+
+    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
+    Integer internalPort;
 
     @Inject
     KubernetesService kubernetesService;
@@ -275,7 +277,7 @@ public class CodeService {
     }
 
     private int getNextAvailablePort() {
-        int dockerPort = dockerService.getMaxPortMapped(INTERNAL_PORT);
+        int dockerPort = dockerService.getMaxPortMapped(internalPort);
         int projectPort = getMaxPortMappedInProjects();
         return Math.max(projectPort, dockerPort) + 1;
     }
@@ -288,16 +290,16 @@ public class CodeService {
             return files.stream().map(this::getProjectPort)
                     .filter(Objects::nonNull)
                     .mapToInt(Integer::intValue)
-                    .max().orElse(INTERNAL_PORT);
+                    .max().orElse(internalPort);
         } else {
-            return INTERNAL_PORT;
+            return internalPort;
         }
     }
 
     public Integer getProjectPort(ProjectFile composeFile) {
         DockerComposeService dcs = DockerComposeConverter.fromCode(composeFile.getCode(), composeFile.getProjectId());
         Optional<Integer> port = dcs.getPortsMap().entrySet().stream()
-                .filter(e -> Objects.equals(e.getValue(), INTERNAL_PORT)).map(Map.Entry::getKey).findFirst();
+                .filter(e -> Objects.equals(e.getValue(), internalPort)).map(Map.Entry::getKey).findFirst();
         return port.orElse(null);
     }
 

@@ -62,6 +62,9 @@ public class CamelService {
     @ConfigProperty(name = "karavan.environment")
     String environment;
 
+    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
+    String internalPort;
+
     @Inject
     Vertx vertx;
 
@@ -148,7 +151,7 @@ public class CamelService {
         if (ConfigService.inKubernetes()) {
             return "http://" + containerName + "." + kubernetesService.getNamespace();
         } else if (ConfigService.inDocker()) {
-            return "http://" + containerName + ":8080";
+            return "http://" + containerName + ":"+ internalPort;
         } else {
             Integer port = projectService.getProjectPort(containerName);
             return "http://localhost:" + port;
@@ -157,9 +160,9 @@ public class CamelService {
 
     public String getContainerAddressForStatus(ContainerStatus containerStatus) {
         if (ConfigService.inKubernetes()) {
-            return "http://" + containerStatus.getPodIP() + ":8080";
+            return "http://" + containerStatus.getPodIP() + ":" + internalPort;
         } else if (ConfigService.inDocker()) {
-            return "http://" + containerStatus.getContainerName() + ":8080";
+            return "http://" + containerStatus.getContainerName() + ":" + internalPort;
         } else {
             Integer port = projectService.getProjectPort(containerStatus.getContainerName());
             return "http://localhost:" + port;

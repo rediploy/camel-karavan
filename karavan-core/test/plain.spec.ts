@@ -57,7 +57,7 @@ describe('Plain YAML to integration', () => {
         const i = CamelDefinitionYaml.yamlToIntegration("test1.yaml", yaml1);
         (i.spec.flows?.at(0)).autoStartup = false;
         const y = CamelDefinitionYaml.integrationToYaml(i);
-        expect(y).to.equal(yaml2);
+        expect(y).to.equal(yaml2.replaceAll("\r\n", "\n") );
     });
 
     it('YAML <-> Integration', () => {
@@ -68,7 +68,7 @@ describe('Plain YAML to integration', () => {
         expect(i.spec.flows?.length).to.equal(1);
         expect(i.type).to.equal('plain');
         const yaml2 = CamelDefinitionYaml.integrationToYaml(i);
-        expect(yaml.replace("\r\n", "\n")).to.equal(yaml2); // replace for Windows compatibility
+        expect(yaml.replaceAll("\r\n", "\n")).to.equal(yaml2); // replace for Windows compatibility
     });
 
 });
