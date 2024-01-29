@@ -9,7 +9,12 @@
         "declaration": true,
         "outDir": "./lib",
         "strict": true,
-        "lib": ["dom", "dom.iterable", "esnext", "ES2021", "ES2021.String"]
+        "lib": ["dom", "dom.iterable", "esnext", "ES2021", "ES2021.String"],
+        "paths": {
+            "undici-types": [
+                "./node_modules/undici-types/index.d.ts"
+            ],
+        }
     },
         "tsc-alias": {
             "resolveFullPaths": true,

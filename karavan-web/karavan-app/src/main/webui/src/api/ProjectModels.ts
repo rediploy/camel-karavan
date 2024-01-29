@@ -157,6 +157,8 @@ export const ProjectFileTypes: ProjectFileType[] = [
     new ProjectFileType("JSON", "JSON", "json"),
     new ProjectFileType("YAML", "YAML", "yaml"),
     new ProjectFileType("SH", "Script", "sh"),
+    new ProjectFileType("BEANIO", "BeanIo", "beanio.xml"),
+    new ProjectFileType("XML","xml","xml"),
     new ProjectFileType("OTHER", "Other", "*"),
 ];
 
@@ -166,6 +168,7 @@ export function getProjectFileType (file: ProjectFile) {
     if (file.name.endsWith(".kamelet.yaml")) return ProjectFileTypes.filter(p => p.name === "KAMELET").map(p => p.title)[0];
     if (file.name.endsWith(".json")) return ProjectFileTypes.filter(p => p.name === "JSON").map(p => p.title)[0];
     if (file.name.endsWith(".yaml")) return ProjectFileTypes.filter(p => p.name === "YAML").map(p => p.title)[0];
+    if (file.name.endsWith(".beanio.xml")) return ProjectFileTypes.filter(p => p.name === "BEANIO").map(p => p.title)[0];
     const extension = file.name.substring(file.name.lastIndexOf('.') + 1);
     const types = ProjectFileTypes.filter(p => p.extension === extension);
     return types.length >0 ? types.map(p => p.title)[0] : "Other";

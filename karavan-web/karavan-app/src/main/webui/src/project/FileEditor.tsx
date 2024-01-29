@@ -23,6 +23,7 @@ import {useFilesStore, useFileStore} from "../api/ProjectStore";
 import {KaravanDesigner} from "../designer/KaravanDesigner";
 import {ProjectService} from "../api/ProjectService";
 import {shallow} from "zustand/shallow";
+import {BeanioHome } from '../designer/beanio/beanioHome';
 
 interface Props {
     projectId: string
@@ -86,14 +87,19 @@ export function FileEditor (props: Props) {
             />
         )
     }
+    function getBeaniODesigner() {
+        return <BeanioHome />
+    }
 
     const isCamelYaml = file !== undefined && file.name.endsWith(".camel.yaml");
     const isKameletYaml = file !== undefined && file.name.endsWith(".kamelet.yaml");
+    const isBeanIoXml = file != undefined && file.name.endsWith(".beanio.xml");
     const isIntegration = isCamelYaml && file?.code && CamelDefinitionYaml.yamlIsIntegration(file.code);
     const showDesigner = (isCamelYaml && isIntegration) || isKameletYaml;
-    const showEditor = !showDesigner;
+    const showEditor = !showDesigner && !isBeanIoXml;
     return (
         <>
+            {isBeanIoXml && getBeaniODesigner()}
             {showDesigner && getDesigner()}
             {showEditor && getEditor()}
         </>
