@@ -7,3 +7,30 @@
     justify-content:center;
     gap: 6px;
 }
+.karavan .beanio-page .stream-element{
+    border-style:dashed;
+    border-color:var(--pf-v5-global--primary-color--100);
+    z-index:10;
+    box-shadow:none;
+    padding: 16px 16px 6px 16px;
+    margin: 40px 80px ;
+    border-radius:42px;
+    border-width:1px;
+}
+.karavan .beanio-page .stream-element .stream-header{
+    padding:10px;
+    justify-content:space-between;
+    border-bottom :1px dashed;
+    border-color:var(--pf-v5-global--primary-color--100);
+}
+.karavan .beanio-page .stream-element .stream-record{
+    margin:10px 20px;
+    padding:10px;
+    justify-content:space-between;
+    border-bottom :1px dashed;
+}
+.karavan .beanio-page .stream-element .stream-record .record-field{
+    margin:10px 20px;
+    padding:10px;
+    justify-content:space-between;
+}

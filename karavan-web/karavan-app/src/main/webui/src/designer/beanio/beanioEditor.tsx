@@ -16,15 +16,21 @@
  */
 import '../karavan.css';
 import './beanio.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Editor } from '@monaco-editor/react';
+import { ProjectFile } from '../../api/ProjectModels';
+import { ProjectService } from '../../api/ProjectService';
+import { BeanioEventBus, BeanioAPI } from './beanioStore';
+import { useFileStore } from '../../api/ProjectStore';
 
 export function BeanioEditor() {
-    const [code, setCode] = useState<string>('');
 
-    
+    const {file, operation,setFile} = useFileStore();
+
     function onChange(code :string|undefined) {
         console.log(code);
+        const json = BeanioAPI.xmlToJson(code);
+console.log(json)
     }
 
 
@@ -33,9 +39,9 @@ export function BeanioEditor() {
         height="100vh"
         defaultLanguage={'xml'}
         theme={'light'}
-        value={code}
+        value={file?.code}
         className={'code-editor'}
-        defaultValue={code}
+        defaultValue={file?.code}
         onChange={(value, ev) => onChange(value)}
     />
     )

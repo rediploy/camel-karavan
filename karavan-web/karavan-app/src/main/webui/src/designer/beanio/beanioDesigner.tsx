@@ -16,29 +16,48 @@
  */
 import '../karavan.css';
 import './beanio.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { shallow } from 'zustand/shallow';
-import { useBeanioStore } from './beanioStore';
-import { Button, Drawer, DrawerContent, DrawerContentBody, DrawerPanelContent } from '@patternfly/react-core';
+import { BeanioEventBus, useBeanioStore,BeanioAPI } from './beanioStore';
+import { Button, Drawer, DrawerContent, DrawerContentBody, DrawerPanelContent, Flex, FlexItem } from '@patternfly/react-core';
 import PlusIcon from "@patternfly/react-icons/dist/esm/icons/plus-icon";
 import { BeanioProperties } from './beanioProperties';
+import { useFileStore } from '../../api/ProjectStore';
+import { BeanioProperty, Field, Record, Stream } from './beanio';
+import { ProjectService } from '../../api/ProjectService';
+import { ProjectFile } from '../../api/ProjectModels';
 
 export function BeanioDesigner() {
-    const [beanIo, updateBeanIo, activeNode, setActiveNode] = useBeanioStore((b) => [b.beanIo, b.updateBeanIo, b.activeNode, b.setActiveNode], shallow)
+    const [beanio, updateBeanIo, selectedStep, setSelectedStep] = useBeanioStore((b) => [b.beanio, b.updateBeanIo, b.selectedStep, b.setSelectedStep], shallow)
+    const {file, operation,setFile} = useFileStore();
 
-
+    useEffect(() => {
+        const sub = BeanioEventBus.onBeanioUpdate()?.subscribe((update: any) => {
+            const xml = BeanioAPI.jsonToXml(update) as string;
+            if (file && xml) {
+                file.code = xml;
+               // setFile('none', file,undefined);
+                ProjectService.saveFile(file as ProjectFile, true);
+            }
+        });
+        return () => {
+            sub.unsubscribe();
+        }
+    }, []);
     function createNewStream() {
-        
+        const newStream = new Stream();
+        updateBeanIo({ ...beanio, stream: [...beanio.stream, newStream] });
+        setSelectedStep(newStream);
     }
     function getCreateNewStream() {
-        return (<Button
-            variant="primary"
-            icon={<PlusIcon/>}
-            onClick={e => createNewStream()}
-        >
-            Create New Stream
-        </Button>)
+        return (<div className='add-stream'><Button
+        variant="primary"
+        icon={<PlusIcon/>}
+        onClick={e => createNewStream()}
+    >
+        Create New Stream
+    </Button></div>)
     }
 function getPropertiesPanel(){
     return (<DrawerPanelContent style={{ transform: "initial" }}
@@ -52,12 +71,91 @@ function getPropertiesPanel(){
     </DrawerPanelContent>);
 }
     
-
+    function createNewRecord(stream:Stream) {
+        const newRecord = new Record();
+        const clonedStream = beanio.stream.find(s => s.id === stream.id);
+        if (clonedStream) {
+            const clonedRecords = clonedStream?.records ? [...clonedStream.records, newRecord] : [newRecord];
+        clonedStream["records"]=clonedRecords
+        const newBeanio = {
+            stream:[...beanio.stream.filter(s => s.id !== stream?.id),clonedStream]
+        }
+        updateBeanIo(newBeanio);
+        setSelectedStep(newRecord);
+        }
+        
+    }
+    function createNewField(record: Record, stream: Stream) {
+        const newField = new Field();
+        const clonedStream = beanio.stream.find(s => s.id === stream.id);
+        
+        if (clonedStream && clonedStream.records) {
+            const clonedRecord = clonedStream?.records.find(r => r.id === record.id);
+            if (clonedRecord) {
+                (clonedRecord as any)["fields" ]= clonedRecord?.fields ? [...clonedRecord.fields, newField] : [newField];
+                clonedStream["records"] = [...clonedStream.records.filter(r => r.id != record.id),clonedRecord];
+            const newBeanio = {
+                stream:[...beanio.stream.filter(s => s.id !== stream?.id),clonedStream]
+            }
+            updateBeanIo(newBeanio);
+            setSelectedStep(newField);
+            }
+          
+        }
+        
+    }
+    function getBodyContent() {
+        return (<>
+            {beanio.stream?.map((stream: Stream) => {
+             return (
+                 <div key={"root" + stream.id} className="stream-element">
+                     <Flex justifyContent={{ default: 'justifyContentCenter' }}>
+                         <FlexItem><h1>Stream</h1></FlexItem>
+                     </Flex>
+                         <Flex className='stream-header'>
+                                <FlexItem>{stream.name}</FlexItem>
+                         <FlexItem>{stream.format}</FlexItem>
+                         <FlexItem><Button  icon={<PlusIcon/>} onClick={()=>createNewRecord(stream)}> Add New Record</Button></FlexItem>
+                     </Flex>
+                     <Flex justifyContent={{ default: 'justifyContentCenter' }}> 
+                         <FlexItem><h1>Records</h1></FlexItem>
+                     </Flex>
+                     {stream.records?.map((record: Record) => {
+                         return (<section className='stream-record'>
+                             <Flex  justifyContent={{ default: 'justifyContentSpaceBetween' }}>
+                                 <FlexItem>{record.name}</FlexItem>
+                                 <FlexItem>{record.position}</FlexItem>
+                                 <FlexItem>{record.length}</FlexItem>
+                                 <FlexItem><Button icon={<PlusIcon />} onClick={() => createNewField(record,stream)}> Add New Field</Button></FlexItem>
+                             </Flex>
+                     
+                             {record.fields?.map((field: Field) => {
+                                    return (
+                                        <Flex className='record-field' justifyContent={{ default: 'justifyContentSpaceBetween' }}>
+                                            <FlexItem>{field.name}</FlexItem>
+                                            <FlexItem>{field.rid}</FlexItem>
+                                            <FlexItem>{field.literal}</FlexItem>
+                                        </Flex>
+                                        
+                                    )
+                                })}
+                         </section>
+                                    
+                         )
+                     })}
+                     
+                     
+              </div>)
+         })}
+        </>
+        )
+}
     return (
         <div className="beanio-page">
             <Drawer isExpanded isInline>
                     <DrawerContent panelContent={getPropertiesPanel()}>
-                        <DrawerContentBody> {getCreateNewStream()}</DrawerContentBody>
+                    <DrawerContentBody>{getBodyContent()}
+                        {getCreateNewStream()}</DrawerContentBody>
                     </DrawerContent>
                 </Drawer>
         </div>

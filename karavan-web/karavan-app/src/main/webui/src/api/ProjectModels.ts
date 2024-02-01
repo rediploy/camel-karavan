@@ -157,7 +157,7 @@ export const ProjectFileTypes: ProjectFileType[] = [
     new ProjectFileType("JSON", "JSON", "json"),
     new ProjectFileType("YAML", "YAML", "yaml"),
     new ProjectFileType("SH", "Script", "sh"),
-    new ProjectFileType("BEANIO", "BeanIo", "beanio.xml"),
+    new ProjectFileType("BEANIO", "Beanio", "beanio.xml"),
     new ProjectFileType("XML","xml","xml"),
     new ProjectFileType("OTHER", "Other", "*"),
 ];

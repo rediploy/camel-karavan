@@ -28,6 +28,8 @@ import { useState } from 'react';
 import { getDesignerIcon } from '../icons/KaravanIcons';
 import { BeanioDesigner } from './beanioDesigner';
 import { BeanioEditor } from './beanioEditor';
+import { shallow } from 'zustand/shallow';
+import { useFileStore, useFilesStore } from '../../api/ProjectStore';
 
 export function BeanioHome() {
     const [tab, setTab] = useState<string>('beanio');
