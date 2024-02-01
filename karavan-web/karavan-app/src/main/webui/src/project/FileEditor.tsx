@@ -14,15 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import '../designer/karavan.css';
 import Editor from "@monaco-editor/react";
 import {CamelDefinitionYaml} from "karavan-core/lib/api/CamelDefinitionYaml";
-import {ProjectFile} from "../api/ProjectModels";
+import {Project, ProjectFile} from "../api/ProjectModels";
 import {useFilesStore, useFileStore} from "../api/ProjectStore";
 import {KaravanDesigner} from "../designer/KaravanDesigner";
 import {ProjectService} from "../api/ProjectService";
 import {shallow} from "zustand/shallow";
+import {KaravanApi} from "../api/KaravanApi";
+import {getPropertyPlaceholders} from "../util/StringUtils";
 
 interface Props {
     projectId: string
@@ -37,11 +39,22 @@ const languages = new Map<string, string>([
 export function FileEditor (props: Props) {
 
     const [file, designerTab] = useFileStore((s) => [s.file, s.designerTab], shallow )
+    const [files] = useFilesStore((s) => [s.files], shallow);
+    const [propertyPlaceholders, setPropertyPlaceholders] = useState<string[]>([]);
+
+    useEffect(() => {
+        const pp = getPropertyPlaceholders(files);
+        setPropertyPlaceholders(prevState => {
+            prevState.length = 0;
+            prevState.push(...pp);
+            return prevState;
+        })
+    }, []);
 
     function save (name: string, code: string) {
         if (file) {
             file.code = code;
-            ProjectService.saveFile(file, true);
+            ProjectService.updateFile(file, true);
         }
     }
 
@@ -61,8 +74,9 @@ export function FileEditor (props: Props) {
                 tab={designerTab}
                 onSave={(name, yaml) => save(name, yaml)}
                 onSaveCustomCode={(name, code) =>
-                    ProjectService.saveFile(new ProjectFile(name + ".java", props.projectId, code, Date.now()), false)}
+                    ProjectService.updateFile(new ProjectFile(name + ".java", props.projectId, code, Date.now()), false)}
                 onGetCustomCode={onGetCustomCode}
+                propertyPlaceholders={propertyPlaceholders}
             />
         )
     }

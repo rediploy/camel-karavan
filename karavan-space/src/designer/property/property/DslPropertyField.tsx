@@ -32,7 +32,7 @@ import {
     Tooltip,
     Card,
     InputGroup,
-    capitalize, InputGroupItem
+    capitalize, InputGroupItem, TextVariants
 } from '@patternfly/react-core';
 import {
     Select,
@@ -50,7 +50,7 @@ import {PropertyMeta} from "karavan-core/lib/model/CamelMetadata";
 import {CamelDefinitionApiExt} from "karavan-core/lib/api/CamelDefinitionApiExt";
 import {ExpressionField} from "./ExpressionField";
 import {CamelUi, RouteToCreate} from "../../utils/CamelUi";
-import {ComponentParameterField} from "./ComponentParameterField";
+import {ComponentPropertyField} from "./ComponentPropertyField";
 import {CamelElement} from "karavan-core/lib/model/IntegrationDefinition";
 import {KameletPropertyField} from "./KameletPropertyField";
 import PlusIcon from "@patternfly/react-icons/dist/esm/icons/plus-icon";
@@ -59,8 +59,6 @@ import {CamelDefinitionApi} from "karavan-core/lib/api/CamelDefinitionApi";
 import AddIcon from "@patternfly/react-icons/dist/js/icons/plus-circle-icon";
 import {MediaTypes} from "../../utils/MediaTypes";
 import {ComponentProperty} from "karavan-core/lib/model/ComponentModels";
-import CompressIcon from "@patternfly/react-icons/dist/js/icons/compress-icon";
-import ExpandIcon from "@patternfly/react-icons/dist/js/icons/expand-icon";
 import {InfrastructureSelector} from "./InfrastructureSelector";
 import {InfrastructureAPI} from "../../utils/InfrastructureAPI";
 import EditorIcon from "@patternfly/react-icons/dist/js/icons/code-icon";
@@ -76,6 +74,7 @@ import {
 import {TemplateApi} from "karavan-core/lib/api/TemplateApi";
 import {KubernetesIcon} from "../../icons/ComponentIcons";
 import {BeanProperties} from "./BeanProperties";
+import {ComponentPropertyPlaceholderDropdown} from "./ComponentPropertyPlaceholderDropdown";
 
 interface Props {
     property: PropertyMeta,
@@ -152,7 +151,11 @@ export function DslPropertyField(props: Props) {
         arrayChanged(fieldId, "");
     }
 
-    function getLabel(property: PropertyMeta, value: any) {
+    function isParameter(property: PropertyMeta): boolean {
+        return property.name === 'parameters' && property.description === 'parameters';
+    }
+
+    function getLabel(property: PropertyMeta, value: any, isKamelet: boolean) {
         if (!isMultiValueField(property) && property.isObject && !property.isArray && !["ExpressionDefinition"].includes(property.type)) {
             const tooltip = value ? "Delete " + property.name : "Add " + property.name;
             const className = value ? "change-button delete-button" : "change-button add-button";
@@ -169,6 +172,8 @@ export function DslPropertyField(props: Props) {
                     </Tooltip>
                 </div>
             )
+        } if (isParameter(property)) {
+            return isKamelet ? "Kamelet properties:" : "Component properties:";
         } else if (!["ExpressionDefinition"].includes(property.type)) {
             return CamelUtil.capitalizeName(property.displayName);
         }
@@ -223,6 +228,9 @@ export function DslPropertyField(props: Props) {
         const inInfrastructure = InfrastructureAPI.infrastructure !== 'local';
         const noInfraSelectorButton = ["uri", "id", "description", "group"].includes(property.name);
         const icon = InfrastructureAPI.infrastructure === 'kubernetes' ? KubernetesIcon("infra-button") : <DockerIcon/>
+        const isNumber = ['integer', 'number', 'duration'].includes(property.type);
+        const uriReadOnly = isUriReadOnly(property);
+        const showEditorButton = !uriReadOnly && !isNumber && !property.secret && !['id', 'description'].includes(property.name);
         return (<InputGroup>
             {inInfrastructure && !showEditor && !noInfraSelectorButton &&
                 <InputGroupItem>
@@ -238,34 +246,35 @@ export function DslPropertyField(props: Props) {
                 <InputGroupItem isFill>
                     <TextInput ref={ref}
                                className="text-field" isRequired
-                               type={['integer', 'number'].includes(property.type) ? 'number' : (property.secret ? "password" : "text")}
+                               type={(property.secret ? "password" : "text")}
                                id={property.name} name={property.name}
                                value={value?.toString()}
-                               onChange={(_, v) => propertyChanged(property.name, ['integer', 'number'].includes(property.type) ? Number(v) : v)}
-                               readOnlyVariant={isUriReadOnly(property) ? "default" : undefined}/>
+                               customIcon={property.type !== 'string' ? <Text component={TextVariants.p}>{property.type}</Text> : undefined}
+                               onChange={(_, v) =>
+                                   propertyChanged(property.name, v)}
+                               readOnlyVariant={uriReadOnly? "default" : undefined}/>
                 </InputGroupItem>
             }
-            {showEditor && !property.secret &&
-                <InputGroupItem isFill>
-                    <TextArea ref={ref}
-                              autoResize={true}
-                              className="text-field" isRequired
-                              type="text"
-                              id={property.name} name={property.name}
-                              value={value?.toString()}
-                              onChange={(_, v) => propertyChanged(property.name, ['integer', 'number'].includes(property.type) ? Number(v) : v)}
-                              readOnlyVariant={isUriReadOnly(property) ? "default" : undefined}/>
-                </InputGroupItem>
-            }
-            {!property.secret &&
-                <InputGroupItem>
-                    <Tooltip position="bottom-end" content={showEditor ? "Change to TextField" : "Change to Text Area"}>
-                        <Button variant="control" onClick={e => setShowEditor(!showEditor)}>
-                            {showEditor ? <CompressIcon/> : <ExpandIcon/>}
-                        </Button>
-                    </Tooltip>
-                </InputGroupItem>
-            }
+            {showEditorButton && <InputGroupItem>
+                <Tooltip position="bottom-end" content={"Show Editor"}>
+                    <Button variant="control" onClick={e => setShowEditor(!showEditor)}>
+                        <EditorIcon/>
+                    </Button>
+                </Tooltip>
+            </InputGroupItem>}
+            {showEditor && <InputGroupItem>
+                <ModalEditor name={property.name}
+                             customCode={value}
+                             showEditor={showEditor}
+                             dark={dark}
+                             dslLanguage={undefined}
+                             title={property.displayName}
+                             onClose={() => setShowEditor(false)}
+                             onSave={(fieldId, value1) => {
+                                 propertyChanged(property.name, value1)
+                                 setShowEditor(false);
+                             }}/>
+            </InputGroupItem>}
         </InputGroup>)
     }
 
@@ -307,7 +316,7 @@ export function DslPropertyField(props: Props) {
                 </Tooltip>
             </InputGroupItem>
             {showEditor && <InputGroupItem>
-                <ModalEditor property={property}
+                <ModalEditor name={property.name}
                              customCode={customCode}
                              showEditor={showEditor}
                              dark={dark}
@@ -345,7 +354,7 @@ export function DslPropertyField(props: Props) {
                     </Tooltip>
                 </InputGroupItem>
                 {showEditor && <InputGroupItem>
-                    <ModalEditor property={property}
+                    <ModalEditor name={property.name}
                                  customCode={value}
                                  showEditor={showEditor}
                                  dark={dark}
@@ -382,7 +391,7 @@ export function DslPropertyField(props: Props) {
         )
     }
 
-    function getSwitch(property: PropertyMeta, value: any) {
+    function getBooleanInput(property: PropertyMeta, value: any) {
         const isValueBoolean = (value === true || value === false);
         const isDisabled = value !== undefined && !isValueBoolean;
         let isChecked = false;
@@ -404,17 +413,16 @@ export function DslPropertyField(props: Props) {
                         isChecked={isChecked}
                         onChange={(_, v) => propertyChanged(property.name, v)}/>
                 </InputGroupItem>
-                {property.placeholder && <InputGroupItem isFill>
+                <InputGroupItem isFill>
                     <TextInput
                         id={property.name + "-placeholder"}
                         name={property.name + "-placeholder"}
                         type="text"
                         aria-label="placeholder"
-                        placeholder="Property placeholder"
                         value={!isValueBoolean ? value?.toString() : undefined}
                         onChange={(_, v) => propertyChanged(property.name, v)}
                     />
-                </InputGroupItem>}
+                </InputGroupItem>
             </TextInputGroup>
         )
     }
@@ -684,7 +692,7 @@ export function DslPropertyField(props: Props) {
             <div className="parameters">
                 {properties.map(kp => {
                     const value = CamelDefinitionApiExt.getParametersValue(element, kp.name, kp.kind === 'path');
-                    return (<ComponentParameterField
+                    return (<ComponentPropertyField
                         key={kp.name}
                         property={kp}
                         value={value}
@@ -696,7 +704,7 @@ export function DslPropertyField(props: Props) {
         )
     }
 
-    function getExpandableComponentParameters(properties: ComponentProperty[], label: string) {
+    function getExpandableComponentProperties(properties: ComponentProperty[], label: string) {
         const element = props.element;
 
         return (
@@ -715,7 +723,7 @@ export function DslPropertyField(props: Props) {
                 isExpanded={isShowAdvanced.includes(label)}>
                 <div className="parameters">
                     {properties.map(kp =>
-                        <ComponentParameterField
+                        <ComponentPropertyField
                             key={kp.name}
                             property={kp}
                             value={CamelDefinitionApiExt.getParametersValue(element, kp.name, kp.kind === 'path')}
@@ -779,11 +787,11 @@ export function DslPropertyField(props: Props) {
             <>
                 {property.name === 'parameters' && getMainComponentParameters(propertiesMain)}
                 {property.name === 'parameters' && element && propertiesScheduler.length > 0
-                    && getExpandableComponentParameters(propertiesScheduler, "Scheduler parameters")}
+                    && getExpandableComponentProperties(propertiesScheduler, "Component scheduler properties")}
                 {property.name === 'parameters' && element && propertiesSecurity.length > 0
-                    && getExpandableComponentParameters(propertiesSecurity, "Security parameters")}
+                    && getExpandableComponentProperties(propertiesSecurity, "Component security properties")}
                 {property.name === 'parameters' && element && propertiesAdvanced.length > 0
-                    && getExpandableComponentParameters(propertiesAdvanced, "Advanced parameters")}
+                    && getExpandableComponentProperties(propertiesAdvanced, "Component advanced properties")}
             </>
         )
     }
@@ -797,9 +805,9 @@ export function DslPropertyField(props: Props) {
     return (
         <div>
             <FormGroup
-                label={props.hideLabel ? undefined : getLabel(property, value)}
+                label={props.hideLabel ? undefined : getLabel(property, value, isKamelet)}
                 isRequired={property.required}
-                labelIcon={getLabelIcon(property)}>
+                labelIcon={isParameter(property) ? undefined : getLabelIcon(property)}>
                 {value !== undefined && ["ExpressionDefinition", "ExpressionSubElementDefinition"].includes(property.type)
                     && getExpressionField(property, value)}
                 {property.isObject && !property.isArray && !["ExpressionDefinition", "ExpressionSubElementDefinition"].includes(property.type)
@@ -825,7 +833,7 @@ export function DslPropertyField(props: Props) {
                 {isMultiValueField(property)
                     && getMultiValueField(property, value)}
                 {property.type === 'boolean'
-                    && getSwitch(property, value)}
+                    && getBooleanInput(property, value)}
                 {property.enumVals
                     && getSelect(property, value)}
                 {isKamelet && property.name === 'parameters' && getKameletParameters()}

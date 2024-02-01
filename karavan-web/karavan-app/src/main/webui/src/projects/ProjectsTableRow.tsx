@@ -81,7 +81,7 @@ export function ProjectsTableRow (props: Props) {
                             const active = value[1];
                             const color = active ? "green" : "grey"
                             const style = active ? {fontWeight: "bold"} : {}
-                            return <Label style={style} color={color} >{value[0]}</Label>
+                            return <Label key={value.toString()} style={style} color={color} >{value[0]}</Label>
                         })}
                     </div>
                 }
@@ -92,7 +92,7 @@ export function ProjectsTableRow (props: Props) {
                           spaceItems={{default: 'spaceItemsNone'}}>
                         <FlexItem>
                             <Tooltip content={"Copy project"} position={"bottom"}>
-                                <Button variant={"plain"} icon={<CopyIcon/>}
+                                <Button className="dev-action-button" variant={"plain"} icon={<CopyIcon/>}
                                         onClick={e => {
                                             setProject(project, "copy");
                                         }}></Button>
@@ -100,7 +100,7 @@ export function ProjectsTableRow (props: Props) {
                         </FlexItem>
                         <FlexItem>
                             <Tooltip content={"Delete project"} position={"bottom"}>
-                                <Button variant={"plain"} icon={<DeleteIcon/>} onClick={e => {
+                                <Button className="dev-action-button" variant={"plain"} icon={<DeleteIcon/>} onClick={e => {
                                     setProject(project, "delete");
                                 }}></Button>
                             </Tooltip>

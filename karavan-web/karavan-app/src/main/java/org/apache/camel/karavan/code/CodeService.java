@@ -23,6 +23,7 @@ import io.apicurio.datamodels.models.openapi.OpenApiDocument;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.smallrye.mutiny.tuples.Tuple3;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -64,6 +65,7 @@ public class CodeService {
     public static final String PROJECT_DEPLOYMENT_JKUBE_FILENAME = "deployment" + PROJECT_JKUBE_EXTENSION;
     private static final String SNIPPETS_PATH = "/snippets/";
     private static final String DATA_FOLDER = System.getProperty("user.dir") + File.separator + "data";
+    public static final String BUILDER_ENV_MAPPING_FILENAME = "kubernetes-builder-env.properties";
 
     @ConfigProperty(name = "karavan.environment")
     String environment;
@@ -93,8 +95,7 @@ public class CodeService {
             "requests.memory", "256Mi",
             "requests.cpu", "500m",
             "limits.memory", "2048Mi",
-            "limits.cpu", "2000m"
-    );
+            "limits.cpu", "2000m");
 
     public Map<String, String> getProjectFilesForDevMode(String projectId, Boolean withKamelets) {
         Map<String, String> files = infinispanService.getProjectFiles(projectId).stream()
@@ -108,6 +109,27 @@ public class CodeService {
                     .forEach(file -> files.put(file.getName(), file.getCode()));
         }
         return files;
+    }
+
+    public List<Tuple3<String, String, String>> getBuilderEnvMapping() {
+        List<Tuple3<String, String, String>> result = new ArrayList<>();
+        ProjectFile projectFile = infinispanService.getProjectFile(Project.Type.templates.name(),
+                BUILDER_ENV_MAPPING_FILENAME);
+        if (projectFile != null) {
+            String text = projectFile.getCode();
+            text.lines().forEach(line -> {
+                String[] params = line.split("=");
+                if (params.length > 1) {
+                    String env = params[0];
+                    String[] secret = params[1].split(":");
+                    String secretName = secret[0];
+                    String secretKey = secret[1];
+                    result.add(Tuple3.of(env, secretName, secretKey));
+                }
+            });
+        }
+
+        return result;
     }
 
     public ProjectFile getApplicationProperties(Project project) {
@@ -125,8 +147,9 @@ public class CodeService {
         if (ConfigService.inKubernetes()) {
             instance.data("namespace", kubernetesService.getNamespace());
         }
-        String code =  instance.render();
-        return new ProjectFile(APPLICATION_PROPERTIES_FILENAME, code, project.getProjectId(), Instant.now().toEpochMilli());
+        String code = instance.render();
+        return new ProjectFile(APPLICATION_PROPERTIES_FILENAME, code, project.getProjectId(),
+                Instant.now().toEpochMilli());
     }
 
     public String saveProjectFilesInTemp(Map<String, String> files) {
@@ -170,7 +193,7 @@ public class CodeService {
 
         List<String> files = new ArrayList<>(interfaces);
         files.addAll(targets.stream().map(target -> target + "-" + APPLICATION_PROPERTIES_FILENAME).toList());
-        files.addAll(targets.stream().map(target ->  target + "-" + BUILD_SCRIPT_FILENAME).toList());
+        files.addAll(targets.stream().map(target -> target + "-" + BUILD_SCRIPT_FILENAME).toList());
 
         files.forEach(file -> {
             String templatePath = SNIPPETS_PATH + file;
@@ -226,7 +249,7 @@ public class CodeService {
 
     public String getPropertiesFile(GitRepo repo) {
         try {
-            for (GitRepoFile e : repo.getFiles()){
+            for (GitRepoFile e : repo.getFiles()) {
                 if (e.getName().equalsIgnoreCase(APPLICATION_PROPERTIES_FILENAME)) {
                     return e.getBody();
                 }
@@ -239,19 +262,20 @@ public class CodeService {
 
     public static String getProperty(String file, String property) {
         String prefix = property + "=";
-        return  Arrays.stream(file.split(System.lineSeparator())).filter(s -> s.startsWith(prefix))
+        return Arrays.stream(file.split(System.lineSeparator())).filter(s -> s.startsWith(prefix))
                 .findFirst().orElseGet(() -> "")
                 .replace(prefix, "");
     }
 
     public static String getValueForProperty(String line, String property) {
         String prefix = property + "=";
-        return  line.replace(prefix, "");
+        return line.replace(prefix, "");
     }
 
     public String getProjectDescription(String file) {
         String description = getProperty(file, "camel.jbang.project-description");
-        return description != null && !description.isBlank() ? description : getProperty(file, "camel.karavan.project-description");
+        return description != null && !description.isBlank() ? description
+                : getProperty(file, "camel.karavan.project-description");
     }
 
     public String getProjectName(String file) {
@@ -273,7 +297,8 @@ public class CodeService {
 
     public ProjectFile createInitialDeployment(Project project) {
         String template = getTemplateText(PROJECT_DEPLOYMENT_JKUBE_FILENAME);
-        return new ProjectFile(PROJECT_DEPLOYMENT_JKUBE_FILENAME, template, project.getProjectId(), Instant.now().toEpochMilli());
+        return new ProjectFile(PROJECT_DEPLOYMENT_JKUBE_FILENAME, template, project.getProjectId(),
+                Instant.now().toEpochMilli());
     }
 
     private int getNextAvailablePort() {
@@ -282,9 +307,8 @@ public class CodeService {
         return Math.max(projectPort, dockerPort) + 1;
     }
 
-
     private int getMaxPortMappedInProjects() {
-        List<ProjectFile> files =  infinispanService.getProjectFilesByName(PROJECT_COMPOSE_FILENAME).stream()
+        List<ProjectFile> files = infinispanService.getProjectFilesByName(PROJECT_COMPOSE_FILENAME).stream()
                 .filter(f -> !Objects.equals(f.getProjectId(), Project.Type.templates.name())).toList();
         if (!files.isEmpty()) {
             return files.stream().map(this::getProjectPort)
@@ -308,8 +332,7 @@ public class CodeService {
         return getProjectPort(composeFile);
     }
 
-
-    public DockerComposeService getInternalDockerComposeService (String name) {
+    public DockerComposeService getInternalDockerComposeService(String name) {
         String composeText = getResourceFile("/services/internal.yaml");
         return DockerComposeConverter.fromCode(composeText, name);
     }
