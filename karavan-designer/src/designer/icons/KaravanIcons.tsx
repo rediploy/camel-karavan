@@ -295,16 +295,13 @@ export function getDesignerIcon(icon: string): React.JSX.Element {
     )
     if (icon === 'routes') return (
         <svg className="top-icon" width="32px" height="32px" viewBox="0 0 32 32" id="icon">
-            <defs>
-                <style>{".cls-1{fill:none;}"}</style>
-            </defs>
             <path
                 d="M29,10H24v2h5v6H22v2h3v2.142a4,4,0,1,0,2,0V20h2a2.0027,2.0027,0,0,0,2-2V12A2.0023,2.0023,0,0,0,29,10ZM28,26a2,2,0,1,1-2-2A2.0027,2.0027,0,0,1,28,26Z"/>
             <path
                 d="M19,6H14V8h5v6H12v2h3v6.142a4,4,0,1,0,2,0V16h2a2.0023,2.0023,0,0,0,2-2V8A2.0023,2.0023,0,0,0,19,6ZM18,26a2,2,0,1,1-2-2A2.0027,2.0027,0,0,1,18,26Z"/>
             <path
                 d="M9,2H3A2.002,2.002,0,0,0,1,4v6a2.002,2.002,0,0,0,2,2H5V22.142a4,4,0,1,0,2,0V12H9a2.002,2.002,0,0,0,2-2V4A2.002,2.002,0,0,0,9,2ZM8,26a2,2,0,1,1-2-2A2.0023,2.0023,0,0,1,8,26ZM3,10V4H9l.0015,6Z"/>
-            <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" className="cls-1" width="32"
+            <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" fill='none' width="32"
                   height="32"/>
         </svg>)
     if (icon === 'route') return (
@@ -335,9 +332,6 @@ export function getDesignerIcon(icon: string): React.JSX.Element {
     )
     if (icon === 'beans') return (
         <svg className="top-icon" width="32px" height="32px" viewBox="0 0 32 32" id="icon">
-            <defs>
-                <style>{".cls-1 {fill: none;}"}</style>
-            </defs>
             <title>data--1</title>
             <rect x="15" y="6" width="13" height="2"/>
             <rect x="15" y="24" width="13" height="2"/>
@@ -347,7 +341,7 @@ export function getDesignerIcon(icon: string): React.JSX.Element {
             <path d="M25,20a4,4,0,1,1,4-4A4,4,0,0,1,25,20Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,25,14Z"
                   transform="translate(0 0)"/>
             <g id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;">
-                <rect className="cls-1" width="32" height="32"/>
+                <rect fill='none' width="32" height="32"/>
             </g>
         </svg>
     )
