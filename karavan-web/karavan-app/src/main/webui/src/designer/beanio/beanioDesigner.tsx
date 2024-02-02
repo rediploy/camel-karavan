@@ -71,7 +71,7 @@ function getPropertiesPanel(){
     </DrawerPanelContent>);
 }
     
-    function createNewRecord(stream:Stream) {
+    function createNewRecord(stream: Stream) {
         const newRecord = new Record();
         const clonedStream = beanio.stream.find(s => s.id === stream.id);
         if (clonedStream) {
@@ -81,7 +81,7 @@ function getPropertiesPanel(){
             stream:[...beanio.stream.filter(s => s.id !== stream?.id),clonedStream]
         }
         updateBeanIo(newBeanio);
-        setSelectedStep(newRecord);
+            setSelectedStep(newRecord);
         }
         
     }
@@ -104,35 +104,38 @@ function getPropertiesPanel(){
         }
         
     }
+    function onSelect(property:Record|Stream|Field) {
+        setSelectedStep(property);
+    }
     function getBodyContent() {
         return (<>
             {beanio.stream?.map((stream: Stream) => {
              return (
-                 <div key={"root" + stream.id} className="stream-element">
+                 <div key={"root" + stream.id} className="stream-element" >
                      <Flex justifyContent={{ default: 'justifyContentCenter' }}>
                          <FlexItem><h1>Stream</h1></FlexItem>
                      </Flex>
-                         <Flex className='stream-header'>
-                                <FlexItem>{stream.name}</FlexItem>
+                         <Flex className='stream-header row' onClick={()=>onSelect(stream)}>
+                                <FlexItem>{stream.streamName}</FlexItem>
                          <FlexItem>{stream.format}</FlexItem>
-                         <FlexItem><Button  icon={<PlusIcon/>} onClick={()=>createNewRecord(stream)}> Add New Record</Button></FlexItem>
+                         <FlexItem><Button icon={<PlusIcon />} onClick={(e) => { e.stopPropagation(); createNewRecord(stream) }}> Add New Record</Button></FlexItem>
                      </Flex>
                      <Flex justifyContent={{ default: 'justifyContentCenter' }}> 
                          <FlexItem><h1>Records</h1></FlexItem>
                      </Flex>
                      {stream.records?.map((record: Record) => {
-                         return (<section className='stream-record'>
-                             <Flex  justifyContent={{ default: 'justifyContentSpaceBetween' }}>
-                                 <FlexItem>{record.name}</FlexItem>
+                         return (<section className='stream-record row'>
+                             <Flex  className='record-row' justifyContent={{ default: 'justifyContentSpaceBetween' }} onClick={()=>onSelect(record)}>
+                                 <FlexItem>{record.recordName}</FlexItem>
                                  <FlexItem>{record.position}</FlexItem>
                                  <FlexItem>{record.length}</FlexItem>
-                                 <FlexItem><Button icon={<PlusIcon />} onClick={() => createNewField(record,stream)}> Add New Field</Button></FlexItem>
+                                 <FlexItem><Button icon={<PlusIcon />} onClick={(e) => { e.stopPropagation(); createNewField(record, stream) }}> Add New Field</Button></FlexItem>
                              </Flex>
                      
                              {record.fields?.map((field: Field) => {
                                     return (
-                                        <Flex className='record-field' justifyContent={{ default: 'justifyContentSpaceBetween' }}>
-                                            <FlexItem>{field.name}</FlexItem>
+                                        <Flex className='record-field row' justifyContent={{ default: 'justifyContentSpaceBetween' }} onClick={() => onSelect(field)}>
+                                            <FlexItem>{field.fieldName}</FlexItem>
                                             <FlexItem>{field.rid}</FlexItem>
                                             <FlexItem>{field.literal}</FlexItem>
                                         </Flex>

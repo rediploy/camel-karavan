@@ -10,7 +10,7 @@ export declare class BeanioProperty {
 
 }
 export class Stream {
-    name?: string;
+    streamName?: string;
     format?: string;
     records?: Record[];
     dslName: string = 'stream';
@@ -25,7 +25,7 @@ export class Stream {
 
 }
 export  class Record{
-    name?: string;
+    recordName?: string;
     position?: number;
     length?: number;
     fields?: Field[];
@@ -38,7 +38,7 @@ export  class Record{
 }
 
 export class Field{
-    name: string='';
+    fieldName: string='';
     rid: boolean=false;
     literal: string='';
     regEx: string = '';
@@ -56,21 +56,20 @@ export class BeanioMetadataApi {
 
 export const BeanioMetadata: ElementMeta[] = [
     new ElementMeta('stream', 'StreamDefinition', 'Stream', "Collects the records", '', [
-        new PropertyMeta('name', 'Name', "Sets the name of this stream", 'string', '', '', true, false, false, false, '', '', false),
+        new PropertyMeta('streamName', 'Name', "Sets the name of this stream", 'string', '', '', true, false, false, false, '', '', false),
         new PropertyMeta('format', 'Format', "Format of the stream", 'string', 'csv,xml,delimiter,fixedLength', 'xml', true, false, true, true, '', '', false),
         new PropertyMeta('minOccurs', 'Min Occurs', "Mininium number of occurrences", 'number', '', '', false, false, false, false, '', '', false),
         new PropertyMeta('maxOccurs', 'Max Occurs', "Maximum number of occurrences", 'number', '', '', false, false, false, false, '', '', false),
         new PropertyMeta('parser', 'Parser', "Parser Elements", 'boolean', '', 'false', false, false, false, false, '', '', false),
     ]),
     new ElementMeta('record', 'Recordefinition', 'Record', "Collects the record details", '', [
-        new PropertyMeta('name', 'Name', "Sets the name of this record", 'string', '', '', false, false, false, false, '', '', false),
+        new PropertyMeta('recordName', 'Name', "Sets the name of this record", 'string', '', '', false, false, false, false, '', '', false),
         new PropertyMeta('position', 'Position', "Position of the record", 'number', '', '', false, false, false, false, '', '', false),
         new PropertyMeta('length', 'Length', "length of the record", 'number', '', '', false, false, false, false, '', '', false),
-        new PropertyMeta('fields', 'fields', "fields to be added", 'array', '', '', false, false, true, false, '', '', false),
     ]),
     new ElementMeta('field', 'FieldDefinition', 'Field', "Collects the Fields", '', [
-        new PropertyMeta('name', 'Name', "Sets the name of this Field", 'string', '', '', false, false, false, false, '', '', false),
-        new PropertyMeta('rid', 'Rid', "Record identifier", 'string', '', '', false, false, false, false, '', '', false),
+        new PropertyMeta('fieldName', 'Name', "Sets the name of this Field", 'string', '', '', false, false, false, false, '', '', false),
+        new PropertyMeta('rid', 'Rid', "Record identifier", 'boolean', '', 'false', false, false, false, false, '', '', false),
         new PropertyMeta('literal', 'literal', "Records to be added", 'string', '', '', false, false, false, false, '', '', false),
         new PropertyMeta('regEx', 'regEx', "regEx to be added", 'string', '', '', false, false, false, false, '', '', false),
     ]),
@@ -79,9 +78,9 @@ export const BeanioMetadata: ElementMeta[] = [
         new PropertyMeta('quote', 'quote', "Quote", 'string', 'csv', '', false, false, false, false, '', '', false),
         new PropertyMeta('escape', 'escape', "Escape", 'string', 'csv,delimiter', '', false, false, false, false, '', '', false),
         new PropertyMeta('comments', 'comments', "Comments", 'string', 'csv,delimiter,fixedLength', '', false, false, false, false, '', '', false),
-        new PropertyMeta('multilineEnabled', 'multilineEnabled', "Multi Line Enables", 'string', 'csv', '', false, false, false, false, '', '', false),
-        new PropertyMeta('whitespaceAllowed', 'whitespaceAllowed', "White Space Allowed", 'string', 'csv', '', false, false, false, false, '', '', false),
-        new PropertyMeta('unquotedQuotesAllowed', 'unquotedQuotesAllowed', "Unquoted Quotes Allowed", 'string', 'csv', '', false, false, false, false, '', '', false),
+        new PropertyMeta('multilineEnabled', 'multilineEnabled', "Multi Line Enables", 'boolean', 'csv', '', false, false, false, false, '', '', false),
+        new PropertyMeta('whitespaceAllowed', 'whitespaceAllowed', "White Space Allowed", 'boolean', 'csv', '', false, false, false, false, '', '', false),
+        new PropertyMeta('unquotedQuotesAllowed', 'unquotedQuotesAllowed', "Unquoted Quotes Allowed", 'boolean', 'csv', '', false, false, false, false, '', '', false),
         new PropertyMeta('recordTerminator', 'recordTerminator', "Record Terminator", 'string', 'csv,delimiter,fixedLength', '', false, false, false, false, '', '', false),
         new PropertyMeta('alwaysQuote', 'alwaysQuote', "Always Quote", 'boolean', 'csv', 'false', false, false, false, false, '', '', false),
         new PropertyMeta('lineContinuationChar', 'lineContinuationChar', "line Continuation Char", 'char', 'delimiter,fixedLength', '', false, false, false, false, '', '', false),

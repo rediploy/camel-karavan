@@ -54,7 +54,7 @@ export class BeanioAPI {
                         _name: 'field',
                         _content:'',
                         _attrs: {
-                            name: fields.name,
+                            name: fields.fieldName,
                             rid: fields.rid,
                             regex:fields.regEx
                         }
@@ -65,7 +65,7 @@ export class BeanioAPI {
                     _name: 'record',
                     _content: fieldsArray,
                     _attrs: {
-                        name:record.name,
+                        name:record.recordName,
                         length: record.length,
                         position:record.position
                     }
@@ -78,7 +78,7 @@ export class BeanioAPI {
                 _name: 'stream',
                 _content:streamContent,
                 _attrs: {
-                    name: stream?.name,
+                    name: stream?.streamName,
                     format:stream?.format
                 }
             }

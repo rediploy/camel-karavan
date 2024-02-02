@@ -29,8 +29,13 @@
     justify-content:space-between;
     border-bottom :1px dashed;
 }
+
 .karavan .beanio-page .stream-element .stream-record .record-field{
     margin:10px 20px;
     padding:10px;
     justify-content:space-between;
+}
+.karavan .beanio-page .row:hover{
+    cursor:pointer;
+    background:#efefef;
 }
