@@ -31,16 +31,17 @@ import {
     DropdownGroup, Divider
 } from '@patternfly/react-core';
 import '../../karavan.css';
-import './ComponentPropertyPlaceholderDropdown.css';
+import './PropertyPlaceholderDropdown.css';
 import "@patternfly/patternfly/patternfly.css";
 import {ComponentProperty} from "karavan-core/lib/model/ComponentModels";
-import {RouteToCreate} from "../../utils/CamelUi";
 import {usePropertiesHook} from "../usePropertiesHook";
 import {useDesignerStore} from "../../DesignerStore";
 import {shallow} from "zustand/shallow";
 import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
 import AddIcon from "@patternfly/react-icons/dist/js/icons/plus-icon";
 import {InfrastructureAPI} from "../../utils/InfrastructureAPI";
+import {PropertyMeta} from "karavan-core/lib/model/CamelMetadata";
+import {RouteToCreate} from "../../utils/CamelUi";
 
 const SYNTAX_EXAMPLES = [
     {key: 'property:', value: 'group.property', description: 'Application property'},
@@ -50,13 +51,14 @@ const SYNTAX_EXAMPLES = [
 ]
 
 interface Props {
-    property: ComponentProperty,
-    value: any
+    property: ComponentProperty | PropertyMeta,
+    value: any,
+    onDslPropertyChange?: (fieldId: string, value: string | number | boolean | any, newRoute?: RouteToCreate) => void,
+    onComponentPropertyChange?: (parameter: string, value: string | number | boolean | any, pathParameter?: boolean, newRoute?: RouteToCreate) => void
 }
 
-export function ComponentPropertyPlaceholderDropdown(props: Props) {
+export function PropertyPlaceholderDropdown(props: Props) {
 
-    const {onParametersChange} = usePropertiesHook();
     const [propertyPlaceholders, setPropertyPlaceholders] = useDesignerStore((s) =>
         [s.propertyPlaceholders, s.setPropertyPlaceholders], shallow)
     const [isOpenPlaceholdersDropdown, setOpenPlaceholdersDropdown] = useState<boolean>(false);
@@ -78,8 +80,12 @@ export function ComponentPropertyPlaceholderDropdown(props: Props) {
 
     const hasPlaceholders = (propertyPlaceholders && propertyPlaceholders.length > 0 );
 
-    function parametersChanged(parameter: string, value: string | number | boolean | any, pathParameter?: boolean, newRoute?: RouteToCreate) {
-        onParametersChange(parameter, value, pathParameter, newRoute);
+    function parametersChanged(value: string | number | boolean | any) {
+        if (property instanceof ComponentProperty) {
+            props.onComponentPropertyChange?.(property.name, `{{${value}}}`, property.kind === 'path');
+        } else {
+            props.onDslPropertyChange?.(property.name, `{{${value}}}`);
+        }
     }
 
     function onMenuToggleClick() {
@@ -151,7 +157,7 @@ export function ComponentPropertyPlaceholderDropdown(props: Props) {
             popperProps={{position: "end"}}
             isOpen={isOpenPlaceholdersDropdown}
             onSelect={(_, value) => {
-                parametersChanged(property.name, `{{${value}}}`, property.kind === 'path')
+                parametersChanged(value);
                 setOpenPlaceholdersDropdown(false);
             }}
             onOpenChange={(isOpen: boolean) => setOpenPlaceholdersDropdown(isOpen)}

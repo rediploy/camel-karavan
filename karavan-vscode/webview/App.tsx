@@ -27,6 +27,7 @@ import { EventBus } from "./designer/utils/EventBus";
 import { KnowledgebasePage } from "./knowledgebase/KnowledgebasePage";
 import { TopologyTab } from "./topology/TopologyTab";
 import { IntegrationFile } from "./topology/TopologyStore";
+import {RegistryBeanDefinition} from "core/model/CamelDefinition";
 
 interface Props {
   dark: boolean
@@ -47,7 +48,8 @@ interface State {
   active: boolean
   tab?: "routes" | "rest" | "beans"
   files: IntegrationFile[],
-  propertyPlaceholders: string[]
+  propertyPlaceholders: string[],
+  beans: RegistryBeanDefinition[]
 }
 
 class App extends React.Component<Props, State> {
@@ -65,7 +67,8 @@ class App extends React.Component<Props, State> {
     page: "designer",
     active: false,
     files: [],
-    propertyPlaceholders: []
+    propertyPlaceholders: [],
+    beans: []
   };
 
   saveScheduledChanges = () => {
@@ -156,7 +159,8 @@ class App extends React.Component<Props, State> {
             loaded: true,
             active: true,
             tab: message.tab,
-            propertyPlaceholders: message.propertyPlaceholders
+            propertyPlaceholders: message.propertyPlaceholders,
+            beans: message.beans
           });
         }
         break;
@@ -187,6 +191,10 @@ class App extends React.Component<Props, State> {
   saveJavCode(name: string, code: string) {
     TemplateApi.saveJavaCode(name, code);
     vscode.postMessage({ command: 'saveCode', name: name, yamlFullPath: this.state.fullPath, yamFileName: this.state.filename, code: code });
+  }
+
+  savePropertyPlaceholder(key: string, value: string) {
+    vscode.postMessage({ command: 'savePropertyPlaceholder', key: key, value: value });
   }
 
   saveIntegrationFiles(files: any) {
@@ -223,6 +231,8 @@ class App extends React.Component<Props, State> {
               return new Promise<string | undefined>(resolve => resolve(code))
             }}
             propertyPlaceholders={this.state.propertyPlaceholders}
+            onSavePropertyPlaceholder={(key, value) => this.savePropertyPlaceholder(key, value)}
+            beans={this.state.beans}
           />
         }
         {loaded && page === "knowledgebase" && <KnowledgebasePage dark={dark} />}

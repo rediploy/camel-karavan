@@ -15,23 +15,15 @@
  * limitations under the License.
  */
 
-.karavan .properties .property-placeholder-toggle {
+.bean-wizard .bean-wizard-toggle {
     padding-left: 6px;
     padding-right: 6px;
 }
 
-.karavan .properties .property-placeholder-toggle .pf-v5-c-button__icon.pf-m-start {
+.bean-wizard .bean-wizard-toggle .pf-v5-c-button__icon.pf-m-start {
     margin-inline-end: 0;
 }
 
-.karavan .properties .property-placeholder-toggle .pf-v5-c-menu-toggle__controls {
+.bean-wizard .bean-wizard-toggle .pf-v5-c-menu-toggle__controls {
     display: none;
-}
-
-.pf-v5-c-popover .property-placeholder-toggle-form {
-    width: 300px;
-}
-
-.pf-v5-c-popover .property-placeholder-toggle-form .pf-v5-c-form__group {
-    grid-template-columns: 1fr 2fr;
 }

@@ -18,13 +18,13 @@ import React, {useEffect, useState} from 'react';
 import '../designer/karavan.css';
 import Editor from "@monaco-editor/react";
 import {CamelDefinitionYaml} from "karavan-core/lib/api/CamelDefinitionYaml";
-import {Project, ProjectFile} from "../api/ProjectModels";
+import {ProjectFile} from "../api/ProjectModels";
 import {useFilesStore, useFileStore} from "../api/ProjectStore";
 import {KaravanDesigner} from "../designer/KaravanDesigner";
 import {ProjectService} from "../api/ProjectService";
 import {shallow} from "zustand/shallow";
-import {KaravanApi} from "../api/KaravanApi";
-import {getPropertyPlaceholders} from "../util/StringUtils";
+import {CodeUtils} from "../util/CodeUtils";
+import {RegistryBeanDefinition} from "karavan-core/lib/model/CamelDefinition";
 
 interface Props {
     projectId: string
@@ -41,12 +41,19 @@ export function FileEditor (props: Props) {
     const [file, designerTab] = useFileStore((s) => [s.file, s.designerTab], shallow )
     const [files] = useFilesStore((s) => [s.files], shallow);
     const [propertyPlaceholders, setPropertyPlaceholders] = useState<string[]>([]);
+    const [beans, setBeans] = useState<RegistryBeanDefinition[]>([]);
 
     useEffect(() => {
-        const pp = getPropertyPlaceholders(files);
+        const pp = CodeUtils.getPropertyPlaceholders(files);
         setPropertyPlaceholders(prevState => {
             prevState.length = 0;
             prevState.push(...pp);
+            return prevState;
+        })
+        const bs = CodeUtils.getBeans(files);
+        setBeans(prevState => {
+            prevState.length = 0;
+            prevState.push(...bs);
             return prevState;
         })
     }, []);
@@ -59,8 +66,16 @@ export function FileEditor (props: Props) {
     }
 
     function onGetCustomCode (name: string, javaType: string): Promise<string | undefined> {
-        const files = useFilesStore.getState().files;
         return new Promise<string | undefined>(resolve => resolve(files.filter(f => f.name === name + ".java")?.at(0)?.code));
+    }
+
+    function onSavePropertyPlaceholder (key: string, value: string) {
+        const file = files.filter(f => f.name === 'application.properties')?.at(0);
+        const code = file?.code?.concat('\n').concat(key).concat('=').concat(value);
+        if (file && code) {
+            file.code = code;
+            ProjectService.updateFile(file, false);
+        }
     }
 
     function getDesigner () {
@@ -77,6 +92,8 @@ export function FileEditor (props: Props) {
                     ProjectService.updateFile(new ProjectFile(name + ".java", props.projectId, code, Date.now()), false)}
                 onGetCustomCode={onGetCustomCode}
                 propertyPlaceholders={propertyPlaceholders}
+                onSavePropertyPlaceholder={onSavePropertyPlaceholder}
+                beans={beans}
             />
         )
     }
