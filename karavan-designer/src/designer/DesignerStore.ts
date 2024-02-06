@@ -20,6 +20,7 @@ import {DslPosition, EventBus} from "./utils/EventBus";
 import {createWithEqualityFn} from "zustand/traditional";
 import {shallow} from "zustand/shallow";
 import {RegistryBeanDefinition} from "karavan-core/lib/model/CamelDefinition";
+import { temporal } from 'zundo';
 
 interface IntegrationState {
     integration: Integration;
@@ -29,25 +30,27 @@ interface IntegrationState {
     reset: () => void;
 }
 
-export const useIntegrationStore = createWithEqualityFn<IntegrationState>((set) => ({
-    integration: Integration.createNew("demo", "plain"),
-    propertyOnly: false,
-    json: '{}',
-    setIntegration: (integration: Integration, propertyOnly: boolean) => {
-        set((state: IntegrationState) => {
-            const json = JSON.stringify(integration);
-            if (state.json === json) {
-                return {integration: state.integration, propertyOnly: state.propertyOnly, json: state.json};
-            } else {
-                EventBus.sendIntegrationUpdate(integration, propertyOnly);
-                return {integration: integration, propertyOnly: propertyOnly, json: json};
-            }
-        })
-    },
-    reset: () => {
-        set({integration: Integration.createNew("demo", "plain"), json: '{}', propertyOnly: false});
-    }
-}), shallow)
+export const useIntegrationStore = createWithEqualityFn<IntegrationState>()(
+    temporal((set) => ({
+        integration: Integration.createNew("demo", "plain"),
+        propertyOnly: false,
+        json: '{}',
+        setIntegration: (integration: Integration, propertyOnly: boolean) => {
+            set((state: IntegrationState) => {
+                const json = JSON.stringify(integration);
+                if (state.json === json) {
+                    return {integration: state.integration, propertyOnly: state.propertyOnly, json: state.json};
+                } else {
+                    EventBus.sendIntegrationUpdate(integration, propertyOnly);
+                    return {integration: integration, propertyOnly: propertyOnly, json: json};
+                }
+            })
+        },
+        reset: () => {
+            set({integration: Integration.createNew("demo", "plain"), json: '{}', propertyOnly: false});
+        }
+    })),
+    shallow);
 
 
 interface SelectorStateState {

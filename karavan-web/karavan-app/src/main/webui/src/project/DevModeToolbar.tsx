@@ -21,7 +21,9 @@ import '../designer/karavan.css';
 import RocketIcon from "@patternfly/react-icons/dist/esm/icons/rocket-icon";
 import ReloadIcon from "@patternfly/react-icons/dist/esm/icons/bolt-icon";
 import DeleteIcon from "@patternfly/react-icons/dist/esm/icons/trash-icon";
-import {useAppConfigStore, useDevModeStore, useLogStore, useProjectStore, useStatusesStore} from "../api/ProjectStore";
+import UndoAltIcon from "@patternfly/react-icons/dist/esm/icons/undo-alt-icon";
+import RedoAltIcon from "@patternfly/react-icons/dist/esm/icons/redo-alt-icon";
+import {useAppConfigStore, useDevModeStore, useFileStore, useLogStore, useProjectStore, useStatusesStore} from "../api/ProjectStore";
 import {ProjectService} from "../api/ProjectService";
 import {shallow} from "zustand/shallow";
 import UpIcon from "@patternfly/react-icons/dist/esm/icons/running-icon";
@@ -30,6 +32,7 @@ import RefreshIcon from "@patternfly/react-icons/dist/esm/icons/sync-alt-icon";
 import StopIcon from "@patternfly/react-icons/dist/esm/icons/stop-icon";
 import {ContainerStatus} from "../api/ProjectModels";
 import "./devmode.css"
+import { useIntegrationStore } from '../designer/DesignerStore';
 
 interface Props {
     reloadOnly?: boolean
@@ -45,6 +48,7 @@ export function DevModeToolbar(props: Props) {
     const [setShowLog] = useLogStore((s) => [s.setShowLog], shallow);
     const [poll, setPoll] = useState(false);
     const [currentContainerStatus, setCurrentContainerStatus] = useState<ContainerStatus>();
+    const {file, operation} = useFileStore();
 
     const containerStatus = containers.filter(c => c.containerName === project.projectId).at(0);
     const commands = containerStatus?.commands || ['run'];
@@ -54,7 +58,8 @@ export function DevModeToolbar(props: Props) {
     const color = containerStatus?.state === 'running' ? "green" : "grey";
     const icon = isRunning ? <UpIcon/> : <DownIcon/>;
     const inDevMode = containerStatus?.type === 'devmode';
-
+    const { undo, redo, clear } = useIntegrationStore.temporal.getState();
+    const showFileIcons = file !== undefined && operation === 'select';
     useEffect(() => {
         const interval = setInterval(() => {
             refreshContainer();
@@ -76,8 +81,30 @@ export function DevModeToolbar(props: Props) {
             setCurrentContainerStatus(containerStatus);
         }
     }
-
-    return (<Flex className="toolbar" direction={{default: "row"}} alignItems={{default: "alignItemsCenter"}}>
+    function undoIntegration() {
+        //undo the last change in the integration store.
+        undo();
+    }
+    function redoIntegration() {
+        redo();
+    }
+    return (<Flex className="toolbar" direction={{ default: "row" }} alignItems={{ default: "alignItemsCenter" }}>
+      {showFileIcons && <FlexItem className="dev-action-button-place">
+            <Tooltip content="undo last change" position={TooltipPosition.bottom}>
+                <Button className="dev-action-button button"
+                        icon={ <UndoAltIcon/>}
+                        variant={"primary"}
+                        onClick={e => undoIntegration()}/>
+            </Tooltip>
+        </FlexItem>}  
+        {showFileIcons && <FlexItem className="dev-action-button-place">
+            <Tooltip content="redo last change" position={TooltipPosition.bottom}>
+                <Button className="dev-action-button button"
+                    icon={<RedoAltIcon />}
+                    variant={"primary"}
+                    onClick={e => redoIntegration()} />
+            </Tooltip>
+        </FlexItem>}
         <FlexItem className="dev-action-button-place refresher">
             {poll && <Spinner className="spinner" size="lg" aria-label="Refresh"/>}
             <Tooltip content={poll ? "Stop refresh" : "Refresh auto"} position={TooltipPosition.bottom}>
