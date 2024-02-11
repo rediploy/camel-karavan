@@ -40,7 +40,7 @@ interface Props {
 export const DesignerPage = (props: Props) => {
 
     const [yaml, setYaml] = useState<string>(props.yaml);
-    const { undo, redo, clear } = useIntegrationStore.temporal.getState();
+    const { undo, redo, pastStates,futureStates } = useIntegrationStore.temporal.getState();
 
     useEffect(() => {
         console.log("DesignerPage")
@@ -103,22 +103,22 @@ export const DesignerPage = (props: Props) => {
                     <FlexItem>
                         <Toolbar id="toolbar-group-types">
                             <ToolbarContent>
-                            <ToolbarItem>
+                           { pastStates.length>0 && <ToolbarItem>
                                     <Tooltip content="Undo last change" position={"bottom"}>
                                         <Button variant="secondary" icon={<UndoAltIcon/>}
                                                 onClick={e => undo()}>
                                             Undo
                                         </Button>
                                     </Tooltip>
-                                </ToolbarItem>
-                                <ToolbarItem>
+                                </ToolbarItem>}
+                                {futureStates.length>0 &&<ToolbarItem>
                                     <Tooltip content="Redo last change" position={"bottom"}>
                                         <Button variant="secondary" icon={<RedoAltIcon/>}
                                                 onClick={e => redo()}>
                                             Redo
                                         </Button>
                                     </Tooltip>
-                                </ToolbarItem>
+                                </ToolbarItem>}
                                 <ToolbarItem>
                                     <Tooltip content="Download YAML" position={"bottom"}>
                                         <Button variant="primary" icon={<DownloadIcon/>} onClick={e => download()}>

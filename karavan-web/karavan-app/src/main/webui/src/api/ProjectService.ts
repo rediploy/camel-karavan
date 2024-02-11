@@ -130,7 +130,7 @@ export class ProjectService {
     public static reloadKamelets() {
         KaravanApi.getKamelets(yamls => {
             const kamelets: string[] = [];
-            yamls.split("\n---\n").map(c => c.trim()).forEach(z => kamelets.push(z));
+            yamls.split(/\n?---\n?/).map(c => c.trim()).forEach(z => kamelets.push(z));
             KameletApi.saveKamelets(kamelets, true);
         })
         KaravanApi.getCustomKameletNames(names => {

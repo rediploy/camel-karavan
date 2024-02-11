@@ -64,12 +64,16 @@ export function KaravanDesigner(props: Props) {
     const [setDark, hideLogDSL, setHideLogDSL, setSelectedStep, reset, badge, message, setPropertyPlaceholders, setBeans] =
         useDesignerStore((s) =>
         [s.setDark, s.hideLogDSL, s.setHideLogDSL, s.setSelectedStep, s.reset, s.notificationBadge, s.notificationMessage, s.setPropertyPlaceholders, s.setBeans], shallow)
-    const [integration, setIntegration] = useIntegrationStore((s) =>
-        [s.integration, s.setIntegration], shallow)
+    const integrationStore= useIntegrationStore();
+    const { clear, pastStates, futureStates} = useIntegrationStore.temporal.getState();
 
     useEffect(() => {
-        const sub = EventBus.onIntegrationUpdate()?.subscribe((update: IntegrationUpdate) =>
-            save(update.integration, update.propertyOnly));
+        const sub = EventBus.onIntegrationUpdate()?.subscribe((update: IntegrationUpdate) => {
+            console.log("called me");
+            console.log(pastStates);
+            console.log(futureStates);
+            return save(update.integration, update.propertyOnly);
+        });
         InfrastructureAPI.setOnSaveCustomCode(props.onSaveCustomCode);
         InfrastructureAPI.setOnGetCustomCode(props.onGetCustomCode);
         InfrastructureAPI.setOnSave(props.onSave);
@@ -77,7 +81,8 @@ export function KaravanDesigner(props: Props) {
 
         setSelectedStep(undefined);
         const i = makeIntegration(props.yaml, props.filename);
-        setIntegration(i, false);
+        integrationStore.setIntegration(i, false);
+        clear(); // to prevent undo on load
         let designerTab = i.kind === 'Kamelet' ? 'kamelet' : props.tab;
         if (designerTab === undefined) {
             const counts = CamelUi.getFlowCounts(i);
@@ -97,6 +102,19 @@ export function KaravanDesigner(props: Props) {
             reset();
         };
     }, []);
+    useEffect(() => {
+        console.log(futureStates);
+        console.log(pastStates);
+            console.log(integrationStore.integration);
+        if (pastStates.length || futureStates.length) {
+            console.log(pastStates);
+            console.log(integrationStore.integration);
+            debugger;
+               EventBus.sendIntegrationUpdate(integrationStore.integration, true);
+        }
+      
+    }, [pastStates,futureStates])
+    
 
     function makeIntegration(yaml: string, filename: string): Integration {
         try {
@@ -124,7 +142,7 @@ export function KaravanDesigner(props: Props) {
     }
 
     function getTab(title: string, tooltip: string, icon: string, showBadge: boolean = false) {
-        const counts = CamelUi.getFlowCounts(integration);
+        const counts = CamelUi.getFlowCounts(integrationStore.integration);
         const count = counts.has(icon) && counts.get(icon) ? counts.get(icon) : undefined;
         const showCount = count && count > 0;
         const color= showBadge && badge ? "red" : "initial";
@@ -143,7 +161,7 @@ export function KaravanDesigner(props: Props) {
         )
     }
 
-    const isKamelet = integration.type === 'kamelet';
+    const isKamelet = integrationStore.integration.type === 'kamelet';
 
     return (
         <PageSection variant={props.dark ? PageSectionVariants.darker : PageSectionVariants.light}

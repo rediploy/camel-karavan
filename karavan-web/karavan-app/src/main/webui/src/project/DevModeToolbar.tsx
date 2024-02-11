@@ -58,7 +58,7 @@ export function DevModeToolbar(props: Props) {
     const color = containerStatus?.state === 'running' ? "green" : "grey";
     const icon = isRunning ? <UpIcon/> : <DownIcon/>;
     const inDevMode = containerStatus?.type === 'devmode';
-    const { undo, redo, clear } = useIntegrationStore.temporal.getState();
+    const { undo, redo, clear, pastStates,futureStates } = useIntegrationStore.temporal.getState();
     const showFileIcons = file !== undefined && operation === 'select';
     useEffect(() => {
         const interval = setInterval(() => {
@@ -89,20 +89,20 @@ export function DevModeToolbar(props: Props) {
         redo();
     }
     return (<Flex className="toolbar" direction={{ default: "row" }} alignItems={{ default: "alignItemsCenter" }}>
-      {showFileIcons && <FlexItem className="dev-action-button-place">
+      {(showFileIcons && pastStates.length>0) && <FlexItem className="dev-action-button-place">
             <Tooltip content="undo last change" position={TooltipPosition.bottom}>
                 <Button className="dev-action-button button"
                         icon={ <UndoAltIcon/>}
                         variant={"primary"}
-                        onClick={e => undoIntegration()}/>
+                        onClick={e => undoIntegration()} >Undo</Button>
             </Tooltip>
         </FlexItem>}  
-        {showFileIcons && <FlexItem className="dev-action-button-place">
+        {(showFileIcons &&  futureStates.length>0) && <FlexItem className="dev-action-button-place">
             <Tooltip content="redo last change" position={TooltipPosition.bottom}>
                 <Button className="dev-action-button button"
                     icon={<RedoAltIcon />}
                     variant={"primary"}
-                    onClick={e => redoIntegration()} />
+                    onClick={e => redoIntegration()} >Redo</Button>
             </Tooltip>
         </FlexItem>}
         <FlexItem className="dev-action-button-place refresher">
