@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Toolbar,
     ToolbarContent,
@@ -27,13 +27,10 @@ import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 import DownloadImageIcon from "@patternfly/react-icons/dist/esm/icons/image-icon";
 import GithubImageIcon from "@patternfly/react-icons/dist/esm/icons/github-icon";
 import UploadIcon from "@patternfly/react-icons/dist/esm/icons/upload-icon";
-import UndoAltIcon from "@patternfly/react-icons/dist/esm/icons/undo-alt-icon";
-import RedoAltIcon from "@patternfly/react-icons/dist/esm/icons/redo-alt-icon";
 import {KaravanDesigner} from "../designer/KaravanDesigner";
 import Editor from "@monaco-editor/react";
 import {UploadModal} from "./UploadModal";
 import {EventBus} from "../designer/utils/EventBus";
-import { useIntegrationStore } from '../designer/DesignerStore';
 
 interface Props {
     name: string,
@@ -43,26 +40,30 @@ interface Props {
     onPush: (type: string) => void
 }
 
+interface State {
+    key: string,
+    karavanDesignerRef: any,
+    showUploadModal: boolean,
+}
 
+export class SpacePage extends React.Component<Props, State> {
 
-export function SpacePage(props: Props) {
-
-   
-    const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
-    const [key, setKey] = useState<string>(Math.random().toString());
-    const { undo, redo, pastStates,futureStates } = useIntegrationStore.temporal.getState();
-
-
-   function save(filename: string, yaml: string, propertyOnly: boolean) {
-        props.onSave(filename, yaml, propertyOnly);
+    public state: State = {
+        key: Math.random().toString(),
+        karavanDesignerRef: React.createRef(),
+        showUploadModal: false
     }
 
-   const copyToClipboard = () => {
-        navigator.clipboard.writeText(props.yaml);
+    save(filename: string, yaml: string, propertyOnly: boolean) {
+        this.props.onSave?.call(this, filename, yaml, propertyOnly);
     }
 
-    const download = () => {
-        const {name, yaml} = props;
+    copyToClipboard = () => {
+        navigator.clipboard.writeText(this.props.yaml);
+    }
+
+    download = () => {
+        const {name, yaml} = this.props;
         if (name && yaml) {
             const a = document.createElement('a');
             a.setAttribute('download', 'example.camel.yaml');
@@ -71,37 +72,36 @@ export function SpacePage(props: Props) {
         }
     }
 
-   const downloadImage = () => {
+    downloadImage = () => {
         EventBus.sendCommand("downloadImage");
     }
 
-   const pushToGithub = () => {
-        props.onPush( 'github');
+    pushToGithub = () => {
+        this.props.onPush?.call(this, 'github');
     }
 
-   const openUploadModal = () => {
-       setShowUploadModal(true)
+    openUploadModal = () => {
+        this.setState({showUploadModal: true})
     }
 
-   const addYaml = (yaml: string | undefined) => {
+    addYaml = (yaml: string | undefined) => {
         if (yaml) {
-            save(props.name, props.yaml + "\n" + yaml, false);
+            this.save(this.props.name, this.props.yaml + "\n" + yaml, false);
         }
-       setShowUploadModal(false);
-       setKey(Math.random().toString());
+        this.setState({showUploadModal: false, key: Math.random().toString()})
     }
 
-    const getDesigner = () => {
-        const {name, yaml} =props;
+    getDesigner = () => {
+        const {name, yaml} = this.props;
         return (
             <KaravanDesigner
                 showCodeTab={true}
-                key={key}
-                dark={props.dark}
+                key={this.state.key}
+                dark={this.props.dark}
                 // ref={this.state.karavanDesignerRef}
                 filename={name}
                 yaml={yaml}
-                onSave={(filename, yaml, propertyOnly) =>save(filename, yaml, propertyOnly)}
+                onSave={(filename, yaml, propertyOnly) => this.save(filename, yaml, propertyOnly)}
                 onGetCustomCode={name => {
                     return new Promise<string | undefined>(resolve => resolve(undefined))
                 }}
@@ -115,6 +115,8 @@ export function SpacePage(props: Props) {
         )
     }
 
+    render() {
+        const {showUploadModal} = this.state;
         return (
             <PageSection className="kamelet-section designer-page" padding={{default: 'noPadding'}}>
                 <PageSection className="tools-section" padding={{default: 'noPadding'}}
@@ -130,57 +132,39 @@ export function SpacePage(props: Props) {
                             </Flex>
                         </FlexItem>
                         <FlexItem>
-                          
                             <Toolbar id="toolbar-group-types">
                                 <ToolbarContent>
-                                    
-                        { pastStates.length>0 && <ToolbarItem>
-                                    <Tooltip content="Undo last change" position={"bottom"}>
-                                        <Button variant="secondary" icon={<UndoAltIcon/>}
-                                                onClick={e => undo()}>
-                                            Undo
-                                        </Button>
-                                    </Tooltip>
-                                </ToolbarItem>}
-                                {futureStates.length>0 &&<ToolbarItem>
-                                    <Tooltip content="Redo last change" position={"bottom"}>
-                                        <Button variant="secondary" icon={<RedoAltIcon/>}
-                                                onClick={e => redo()}>
-                                            Redo
-                                        </Button>
-                                    </Tooltip>
-                                </ToolbarItem>}
                                     <ToolbarItem>
                                         <Tooltip content="Copy to Clipboard" position={"bottom"}>
-                                            <Button variant="primary" icon={<CopyIcon/>} onClick={e => copyToClipboard()}>
+                                            <Button variant="primary" icon={<CopyIcon/>} onClick={e => this.copyToClipboard()}>
                                                 Copy
                                             </Button>
                                         </Tooltip>
                                     </ToolbarItem>
                                     <ToolbarItem>
                                         <Tooltip content="Download YAML" position={"bottom"}>
-                                            <Button variant="secondary" icon={<DownloadIcon/>} onClick={e =>download()}>
+                                            <Button variant="secondary" icon={<DownloadIcon/>} onClick={e => this.download()}>
                                                 YAML
                                             </Button>
                                         </Tooltip>
                                     </ToolbarItem>
                                     <ToolbarItem>
                                         <Tooltip content="Download image" position={"bottom"}>
-                                            <Button variant="secondary" icon={<DownloadImageIcon/>} onClick={e =>downloadImage()}>
+                                            <Button variant="secondary" icon={<DownloadImageIcon/>} onClick={e => this.downloadImage()}>
                                                 Image
                                             </Button>
                                         </Tooltip>
                                     </ToolbarItem>
                                     <ToolbarItem>
                                         <Tooltip content="Push to Github" position={"bottom-end"}>
-                                            <Button variant="secondary" icon={<GithubImageIcon/>} onClick={e =>pushToGithub()}>
+                                            <Button variant="secondary" icon={<GithubImageIcon/>} onClick={e => this.pushToGithub()}>
                                                 Push
                                             </Button>
                                         </Tooltip>
                                     </ToolbarItem>
                                     <ToolbarItem>
                                         <Tooltip content="Upload OpenAPI" position={"bottom"}>
-                                            <Button variant="secondary" icon={<UploadIcon/>} onClick={e => openUploadModal()}>
+                                            <Button variant="secondary" icon={<UploadIcon/>} onClick={e => this.openUploadModal()}>
                                                 OpenAPI
                                             </Button>
                                         </Tooltip>
@@ -190,9 +174,9 @@ export function SpacePage(props: Props) {
                         </FlexItem>
                     </Flex>
                 </PageSection>
-                {getDesigner()}
-                <UploadModal isOpen={showUploadModal} onClose={yaml => addYaml(yaml)}/>
+                {this.getDesigner()}
+                <UploadModal isOpen={showUploadModal} onClose={yaml => this.addYaml(yaml)}/>
             </PageSection>
         );
-    
+    }
 };

@@ -257,8 +257,8 @@ export function BeanProperties (props: Props) {
                             <div key={"key-" + i} className="bean-property">
                                 <TextInput placeholder="Bean Field Name" className="text-field" isRequired type="text" id={"key-" + i}
                                            name={"key-" + i} value={key}
-                                           onChange={(_, beanFieldName) => {
-                                               propertyChanged(i, beanFieldName, value, showPassword)
+                                           onBlur={(_) => {
+                                               propertyChanged(i, _?.target.value, value, showPassword)
                                            }}/>
                                 <InputGroup>
                                     {inInfrastructure &&
@@ -276,8 +276,8 @@ export function BeanProperties (props: Props) {
                                             id={"value-" + i}
                                             name={"value-" + i}
                                             value={value}
-                                            onChange={(_, value) => {
-                                                propertyChanged(i, key, value, showPassword)
+                                            onBlur={(_) => {
+                                                propertyChanged(i, key, _?.target.value, showPassword)
                                             }}/>
                                     </InputGroupItem>
                                     {isSecret && <Tooltip position="bottom-end" content={showPassword ? "Hide" : "Show"}>

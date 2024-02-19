@@ -58,7 +58,6 @@ export function DevModeToolbar(props: Props) {
     const color = containerStatus?.state === 'running' ? "green" : "grey";
     const icon = isRunning ? <UpIcon/> : <DownIcon/>;
     const inDevMode = containerStatus?.type === 'devmode';
-    const { undo, redo, clear, pastStates,futureStates } = useIntegrationStore.temporal.getState();
     const showFileIcons = file !== undefined && operation === 'select';
     useEffect(() => {
         const interval = setInterval(() => {
@@ -81,31 +80,8 @@ export function DevModeToolbar(props: Props) {
             setCurrentContainerStatus(containerStatus);
         }
     }
-    function undoIntegration() {
-        //undo the last change in the integration store.
-        undo();
-    }
-    function redoIntegration() {
-        redo();
-    }
     return (<Flex className="toolbar" direction={{ default: "row" }} alignItems={{ default: "alignItemsCenter" }}>
-      {(showFileIcons && pastStates.length>0) && <FlexItem className="dev-action-button-place">
-            <Tooltip content="undo last change" position={TooltipPosition.bottom}>
-                <Button className="dev-action-button button"
-                        icon={ <UndoAltIcon/>}
-                        variant={"primary"}
-                        onClick={e => undoIntegration()} >Undo</Button>
-            </Tooltip>
-        </FlexItem>}  
-        {(showFileIcons &&  futureStates.length>0) && <FlexItem className="dev-action-button-place">
-            <Tooltip content="redo last change" position={TooltipPosition.bottom}>
-                <Button className="dev-action-button button"
-                    icon={<RedoAltIcon />}
-                    variant={"primary"}
-                    onClick={e => redoIntegration()} >Redo</Button>
-            </Tooltip>
-        </FlexItem>}
-        <FlexItem className="dev-action-button-place refresher">
+             <FlexItem className="dev-action-button-place refresher">
             {poll && <Spinner className="spinner" size="lg" aria-label="Refresh"/>}
             <Tooltip content={poll ? "Stop refresh" : "Refresh auto"} position={TooltipPosition.bottom}>
                 <Button className="dev-action-button button"

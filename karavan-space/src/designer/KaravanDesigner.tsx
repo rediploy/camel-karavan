@@ -24,6 +24,10 @@ import {
     Tabs,
     TabTitleIcon,
     TabTitleText,
+    Toolbar,
+    ToolbarContent,
+    ToolbarItem,
+    Tooltip,
 } from '@patternfly/react-core';
 import './karavan.css';
 import {RouteDesigner} from "./route/RouteDesigner";
@@ -43,6 +47,8 @@ import BellIcon from '@patternfly/react-icons/dist/esm/icons/bell-icon';
 import {KameletDesigner} from "./kamelet/KameletDesigner";
 import {RegistryBeanDefinition} from "karavan-core/lib/model/CamelDefinition";
 
+import UndoAltIcon from "@patternfly/react-icons/dist/esm/icons/undo-alt-icon";
+import RedoAltIcon from "@patternfly/react-icons/dist/esm/icons/redo-alt-icon";
 interface Props {
     onSave: (filename: string, yaml: string, propertyOnly: boolean) => void
     onSaveCustomCode: (name: string, code: string) => void
@@ -65,7 +71,7 @@ export function KaravanDesigner(props: Props) {
         useDesignerStore((s) =>
         [s.setDark, s.hideLogDSL, s.setHideLogDSL, s.setSelectedStep, s.reset, s.notificationBadge, s.notificationMessage, s.setPropertyPlaceholders, s.setBeans], shallow)
     const integrationStore= useIntegrationStore();
-    const { clear, pastStates, futureStates} = useIntegrationStore.temporal.getState();
+    const { clear, pastStates, futureStates,undo, redo} = useIntegrationStore.temporal.getState();
 
     useEffect(() => {
         const sub = EventBus.onIntegrationUpdate()?.subscribe((update: IntegrationUpdate) => {
@@ -159,14 +165,14 @@ export function KaravanDesigner(props: Props) {
         <PageSection variant={props.dark ? PageSectionVariants.darker : PageSectionVariants.light}
                      className="page"
                      isFilled padding={{default: 'noPadding'}}>
-            <div className={"main-tabs-wrapper"}>
+            <div className={"main-tabs-wrapper"} style={{width: "100%"}}>
                 <Tabs className="main-tabs"
                       activeKey={tab}
                       onSelect={(event, tabIndex) => {
                           setTab(tabIndex.toString());
                           setSelectedStep(undefined);
                       }}
-                      style={{width: "100%"}}>
+                      >
                     {isKamelet && <Tab eventKey='kamelet' title={getTab("Definitions", "Kamelet Definitions", "kamelet")}></Tab>}
                     <Tab eventKey='routes' title={getTab("Routes", "Integration flows", "routes")}></Tab>
                     {!isKamelet && <Tab eventKey='rest' title={getTab("REST", "REST services", "rest")}></Tab>}
@@ -186,7 +192,32 @@ export function KaravanDesigner(props: Props) {
                 {/*        className={"hide-log"}*/}
                 {/*    />*/}
                 {/*</Tooltip>}*/}
+                <Toolbar  style={{padding:"0px"}} >
+                            <ToolbarContent className='pf-m-spacer-none'>
+                            { pastStates.length>0 && <ToolbarItem>
+                        <Tooltip content="Undo last change" position={"bottom"}>
+                                        <Button variant="secondary" icon={<UndoAltIcon/>}
+                                                onClick={e => undo()}>
+                                            Undo
+                                        </Button>
+                                    </Tooltip>
+                                                          </ToolbarItem>
+                
+                                   }
+                    {futureStates.length>0 &&<ToolbarItem>
+                                    <Tooltip content="Redo last change" position={"bottom"}>
+                                        <Button variant="secondary" icon={<RedoAltIcon/>}
+                                                onClick={e => redo()}>
+                                            Redo
+                                        </Button>
+                            </Tooltip>
+                            </ToolbarItem>
+                        }
+                    </ToolbarContent>
+                    </Toolbar>
             </div>
+            
+           
             {tab === 'kamelet' && <KameletDesigner/>}
             {tab === 'routes' && <RouteDesigner/>}
             {tab === 'rest' && <RestDesigner/>}

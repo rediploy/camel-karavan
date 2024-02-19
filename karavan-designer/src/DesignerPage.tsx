@@ -24,8 +24,6 @@ import {
 import './designer/karavan.css';
 import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 import DownloadImageIcon from "@patternfly/react-icons/dist/esm/icons/image-icon";
-import UndoAltIcon from "@patternfly/react-icons/dist/esm/icons/undo-alt-icon";
-import RedoAltIcon from "@patternfly/react-icons/dist/esm/icons/redo-alt-icon";
 import {KaravanDesigner} from "./designer/KaravanDesigner";
 import {EventBus} from "./designer/utils/EventBus";
 import { useIntegrationStore } from './designer/DesignerStore';
@@ -40,7 +38,6 @@ interface Props {
 export const DesignerPage = (props: Props) => {
 
     const [yaml, setYaml] = useState<string>(props.yaml);
-    const { undo, redo, pastStates,futureStates } = useIntegrationStore.temporal.getState();
 
     useEffect(() => {
         console.log("DesignerPage")
@@ -103,23 +100,7 @@ export const DesignerPage = (props: Props) => {
                     <FlexItem>
                         <Toolbar id="toolbar-group-types">
                             <ToolbarContent>
-                           { pastStates.length>0 && <ToolbarItem>
-                                    <Tooltip content="Undo last change" position={"bottom"}>
-                                        <Button variant="secondary" icon={<UndoAltIcon/>}
-                                                onClick={e => undo()}>
-                                            Undo
-                                        </Button>
-                                    </Tooltip>
-                                </ToolbarItem>}
-                                {futureStates.length>0 &&<ToolbarItem>
-                                    <Tooltip content="Redo last change" position={"bottom"}>
-                                        <Button variant="secondary" icon={<RedoAltIcon/>}
-                                                onClick={e => redo()}>
-                                            Redo
-                                        </Button>
-                                    </Tooltip>
-                                </ToolbarItem>}
-                                <ToolbarItem>
+                                                          <ToolbarItem>
                                     <Tooltip content="Download YAML" position={"bottom"}>
                                         <Button variant="primary" icon={<DownloadIcon/>} onClick={e => download()}>
                                             YAML

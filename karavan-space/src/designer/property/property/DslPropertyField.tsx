@@ -652,7 +652,7 @@ export function DslPropertyField(props: Props) {
             <div>
                 <TextInputGroup className="input-group">
                     <TextInputGroupMain value={arrayValues.get(property.name)}
-                                        onChange={(e, v) => arrayChanged(property.name, v)}
+                                        onBlur={(e) => arrayChanged(property.name, e?.target.value)}
                                         onKeyUp={e => {
                                             if (e.key === 'Enter') arraySave(property.name)
                                         }}
