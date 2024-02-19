@@ -69,9 +69,6 @@ export function KaravanDesigner(props: Props) {
 
     useEffect(() => {
         const sub = EventBus.onIntegrationUpdate()?.subscribe((update: IntegrationUpdate) => {
-            console.log("called me");
-            console.log(pastStates);
-            console.log(futureStates);
             return save(update.integration, update.propertyOnly);
         });
         InfrastructureAPI.setOnSaveCustomCode(props.onSaveCustomCode);
@@ -103,14 +100,9 @@ export function KaravanDesigner(props: Props) {
         };
     }, []);
     useEffect(() => {
-        console.log(futureStates);
-        console.log(pastStates);
-            console.log(integrationStore.integration);
         if (pastStates.length || futureStates.length) {
-            console.log(pastStates);
-            console.log(integrationStore.integration);
-            debugger;
-               EventBus.sendIntegrationUpdate(integrationStore.integration, true);
+            EventBus.sendIntegrationUpdate(integrationStore.integration, true);
+            //to save the changes in server when undo/redo happens.
         }
       
     }, [pastStates,futureStates])

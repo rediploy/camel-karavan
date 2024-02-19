@@ -51,6 +51,7 @@
     "react-scripts": "5.0.1",
     "rxjs": "7.8.1",
     "uuid": "9.0.1",
+    "zundo": "^2.1.0",
     "zustand": "^4.4.3"
   },
   "devDependencies": {

@@ -21,6 +21,7 @@ import {createWithEqualityFn} from "zustand/traditional";
 import {shallow} from "zustand/shallow";
 import {RegistryBeanDefinition} from "karavan-core/lib/model/CamelDefinition";
 import { temporal } from 'zundo';
+import isDeepEqual from 'fast-deep-equal';
 
 interface IntegrationState {
     integration: Integration;
@@ -49,7 +50,10 @@ export const useIntegrationStore = createWithEqualityFn<IntegrationState>()(
         reset: () => {
             set({integration: Integration.createNew("demo", "plain"), json: '{}', propertyOnly: false});
         }
-    })),
+    }), {
+        equality: (pastState, currentState) =>
+        isDeepEqual(pastState, currentState)
+    }),
     shallow);
 
 

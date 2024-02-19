@@ -250,8 +250,8 @@ export function DslPropertyField(props: Props) {
                                id={property.name} name={property.name}
                                value={value?.toString()}
                                customIcon={property.type !== 'string' ? <Text component={TextVariants.p}>{property.type}</Text> : undefined}
-                               onChange={(_, v) =>
-                                   propertyChanged(property.name, v)}
+                               onBlur={(_) =>
+                                   propertyChanged(property.name, _?.target.value)}
                                readOnlyVariant={uriReadOnly? "default" : undefined}/>
                 </InputGroupItem>
             }
@@ -302,8 +302,8 @@ export function DslPropertyField(props: Props) {
                     type="text"
                     id={property.name} name={property.name}
                     value={value?.toString()}
-                    onChange={(_, value) => {
-                        propertyChanged(property.name, CamelUtil.capitalizeName(value?.replace(/\s/g, '')))
+                    onBlur={(_) => {
+                        propertyChanged(property.name, CamelUtil.capitalizeName(_?.target.value?.replace(/\s/g, '')))
                     }}
                     readOnlyVariant={isUriReadOnly(property) ? "default" : undefined}/>
             </InputGroupItem>
@@ -344,7 +344,7 @@ export function DslPropertyField(props: Props) {
                         name={property.name}
                         height={"100px"}
                         value={value?.toString()}
-                        onChange={(_, v) => propertyChanged(property.name, v)}/>
+                        onBlur={(_) => propertyChanged(property.name, _?.target.value)}/>
                 </InputGroupItem>
                 <InputGroupItem>
                     <Tooltip position="bottom-end" content={"Show Editor"}>
@@ -411,7 +411,7 @@ export function DslPropertyField(props: Props) {
                         value={value?.toString()}
                         aria-label={property.name}
                         isChecked={isChecked}
-                        onChange={(_, v) => propertyChanged(property.name, v)}/>
+                        onBlur={(_) => propertyChanged(property.name, _?.target.value)}/>
                 </InputGroupItem>
                 <InputGroupItem isFill>
                     <TextInput
@@ -420,7 +420,7 @@ export function DslPropertyField(props: Props) {
                         type="text"
                         aria-label="placeholder"
                         value={!isValueBoolean ? value?.toString() : undefined}
-                        onChange={(_, v) => propertyChanged(property.name, v)}
+                        onBlur={(_) => propertyChanged(property.name, _?.target.value)}
                     />
                 </InputGroupItem>
                 <InputGroupItem>
@@ -652,7 +652,7 @@ export function DslPropertyField(props: Props) {
             <div>
                 <TextInputGroup className="input-group">
                     <TextInputGroupMain value={arrayValues.get(property.name)}
-                                        onChange={(e, v) => arrayChanged(property.name, v)}
+                                        onBlur={(e) => arrayChanged(property.name, e?.target.value)}
                                         onKeyUp={e => {
                                             if (e.key === 'Enter') arraySave(property.name)
                                         }}
