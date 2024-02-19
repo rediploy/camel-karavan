@@ -19,6 +19,7 @@ import { workspace, Uri, window, ExtensionContext, FileType } from "vscode";
 import { CamelDefinitionYaml } from "core/api/CamelDefinitionYaml";
 import { Integration, KameletTypes } from "core/model/IntegrationDefinition";
 import { RegistryBeanDefinition } from "core/model/CamelDefinition";
+import { TopologyUtils } from "core/api/TopologyUtils";
 
 export function getRoot(): string | undefined {
     return (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
@@ -270,7 +271,7 @@ export async function readCamelYamlFiles(dir: string) {
         const readData = await readFile(path.resolve(filename));
         const yaml = Buffer.from(readData).toString('utf8');
         if (CamelDefinitionYaml.yamlIsIntegration(yaml)) {
-            const basename = filename.replace(dir, '');
+            const basename = filename.replace(dir, '').substring(1);
             result[basename] = yaml;
         }
     }
@@ -455,4 +456,44 @@ function setMinikubeEnvVariables(env: string): Map<string, string> {
         map.set(key, value);
     })
     return map;
+}
+
+export async function getIntegrations(dir: string) {
+    const files = await readCamelYamlFiles(dir);
+    const integrations: Integration[] = [];
+    Object.getOwnPropertyNames(files).forEach(n => {
+        const i = CamelDefinitionYaml.yamlToIntegration(n, files[n]);
+        integrations.push(i);
+    });
+    return integrations;
+}
+
+export async function getFileWithIntegnalConsumer(fullPath: string, uri: string, name: string) {
+    try {
+        const integrations = await getIntegrations(path.dirname(fullPath));
+        const route = TopologyUtils.findTopologyRouteNodes(integrations)
+                .filter(t => t?.from?.uri === uri && t?.from?.parameters?.name === name).at(0);
+        if (route) {
+            return path.join(path.dirname(fullPath), route.fileName);
+        }
+    }
+    catch (e) {
+        console.log((e as Error).message);
+    }
+    return undefined;
+}
+
+export async function getFileWithInternalProducer(fullPath: string, routeId: string) {
+    try {
+        const integrations = await getIntegrations(path.dirname(fullPath))
+        const route = TopologyUtils.findTopologyOutgoingNodes(integrations)
+                .filter(t => t.routeId === routeId).at(0);
+        if (route) {
+            return path.join(path.dirname(fullPath), route.fileName);
+        }
+    }
+    catch (e) {
+        console.log((e as Error).message);
+    }
+    return undefined;
 }

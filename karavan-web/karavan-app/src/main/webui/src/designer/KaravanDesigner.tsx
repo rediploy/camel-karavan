@@ -32,7 +32,7 @@ import {
 import './karavan.css';
 import {RouteDesigner} from "./route/RouteDesigner";
 import {CamelDefinitionYaml} from "karavan-core/lib/api/CamelDefinitionYaml";
-import {Integration} from "karavan-core/lib/model/IntegrationDefinition";
+import {Integration, IntegrationFile} from "karavan-core/lib/model/IntegrationDefinition";
 import {CamelUtil} from "karavan-core/lib/api/CamelUtil";
 import {CamelUi} from "./utils/CamelUi";
 import {useDesignerStore, useIntegrationStore} from "./DesignerStore";
@@ -54,6 +54,7 @@ interface Props {
     onSaveCustomCode: (name: string, code: string) => void
     onGetCustomCode: (name: string, javaType: string) => Promise<string | undefined>
     onSavePropertyPlaceholder: (key: string, value: string) => void
+    onInternalConsumerClick: (uri?: string, name?: string, routeId?: string) => void
     filename: string
     yaml: string
     dark: boolean
@@ -62,6 +63,7 @@ interface Props {
     tab?: "routes" | "rest" | "beans"
     propertyPlaceholders: string[]
     beans: RegistryBeanDefinition[]
+    files: IntegrationFile[]
 }
 
 export function KaravanDesigner(props: Props) {
@@ -70,8 +72,9 @@ export function KaravanDesigner(props: Props) {
     const [setDark, hideLogDSL, setHideLogDSL, setSelectedStep, reset, badge, message, setPropertyPlaceholders, setBeans] =
         useDesignerStore((s) =>
         [s.setDark, s.hideLogDSL, s.setHideLogDSL, s.setSelectedStep, s.reset, s.notificationBadge, s.notificationMessage, s.setPropertyPlaceholders, s.setBeans], shallow)
-    const integrationStore= useIntegrationStore();
     const { clear, pastStates, futureStates,undo, redo} = useIntegrationStore.temporal.getState();
+    const [integration, setIntegration, resetFiles] = useIntegrationStore((s) =>
+        [s.integration, s.setIntegration, s.resetFiles], shallow)
 
     useEffect(() => {
         const sub = EventBus.onIntegrationUpdate()?.subscribe((update: IntegrationUpdate) => {
@@ -81,10 +84,11 @@ export function KaravanDesigner(props: Props) {
         InfrastructureAPI.setOnGetCustomCode(props.onGetCustomCode);
         InfrastructureAPI.setOnSave(props.onSave);
         InfrastructureAPI.setOnSavePropertyPlaceholder(props.onSavePropertyPlaceholder);
+        InfrastructureAPI.setOnInternalConsumerClick(props.onInternalConsumerClick);
 
         setSelectedStep(undefined);
         const i = makeIntegration(props.yaml, props.filename);
-        integrationStore.setIntegration(i, false);
+        setIntegration(i, false);
         clear(); // to prevent undo on load
         let designerTab = i.kind === 'Kamelet' ? 'kamelet' : props.tab;
         if (designerTab === undefined) {
@@ -98,6 +102,7 @@ export function KaravanDesigner(props: Props) {
         setDark(props.dark);
         setPropertyPlaceholders(props.propertyPlaceholders)
         setBeans(props.beans)
+        resetFiles(props.files)
         setHideLogDSL(props.hideLogDSL === true);
         return () => {
             sub?.unsubscribe();
@@ -107,7 +112,7 @@ export function KaravanDesigner(props: Props) {
     }, []);
     useEffect(() => {
         if (pastStates.length || futureStates.length) {
-            EventBus.sendIntegrationUpdate(integrationStore.integration, true);
+            EventBus.sendIntegrationUpdate(integration, true);
             //to save the changes in server when undo/redo happens.
         }
       
@@ -140,7 +145,7 @@ export function KaravanDesigner(props: Props) {
     }
 
     function getTab(title: string, tooltip: string, icon: string, showBadge: boolean = false) {
-        const counts = CamelUi.getFlowCounts(integrationStore.integration);
+        const counts = CamelUi.getFlowCounts(integration);
         const count = counts.has(icon) && counts.get(icon) ? counts.get(icon) : undefined;
         const showCount = count && count > 0;
         const color= showBadge && badge ? "red" : "initial";
@@ -159,7 +164,7 @@ export function KaravanDesigner(props: Props) {
         )
     }
 
-    const isKamelet = integrationStore.integration.type === 'kamelet';
+    const isKamelet = integration.type === 'kamelet';
 
     return (
         <PageSection variant={props.dark ? PageSectionVariants.darker : PageSectionVariants.light}

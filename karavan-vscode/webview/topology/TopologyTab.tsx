@@ -31,10 +31,11 @@ import {
 } from '@patternfly/react-topology';
 import {customComponentFactory, getModel} from "./TopologyApi";
 import {shallow} from "zustand/shallow";
-import {IntegrationFile, useTopologyStore} from "./TopologyStore";
+import {useTopologyStore} from "./TopologyStore";
 import {TopologyPropertiesPanel} from "./TopologyPropertiesPanel";
 import {TopologyToolbar} from "./TopologyToolbar";
 import {useDesignerStore} from "../designer/DesignerStore";
+import {IntegrationFile} from "core/model/IntegrationDefinition";
 
 interface Props {
     files: IntegrationFile[],
@@ -47,8 +48,8 @@ interface Props {
 
 export function TopologyTab(props: Props) {
 
-    const [selectedIds, setSelectedIds, setFileName, ranker, setRanker] = useTopologyStore((s) =>
-        [s.selectedIds, s.setSelectedIds, s.setFileName, s.ranker, s.setRanker], shallow);
+    const [selectedIds, setSelectedIds, setFileName, ranker, setRanker, setNodeData] = useTopologyStore((s) =>
+        [s.selectedIds, s.setSelectedIds, s.setFileName, s.ranker, s.setRanker, s.setNodeData], shallow);
     const [setSelectedStep] = useDesignerStore((s) => [s.setSelectedStep], shallow)
 
     function setTopologySelected(model: Model, ids: string []) {
@@ -57,6 +58,7 @@ export function TopologyTab(props: Props) {
             const node = model.nodes?.filter(node => node.id === ids[0]);
             if (node && node.length > 0) {
                 const data = node[0].data;
+                setNodeData(data);
                 setFileName(data.fileName)
                 if (data.step) {
                     setSelectedStep(data.step)
@@ -136,7 +138,7 @@ export function TopologyTab(props: Props) {
         });
     }, [ranker, controller, setRanker]);
 
-        return (
+    return (
         <TopologyView
             className="topology-panel"
             contextToolbar={!props.hideToolbar

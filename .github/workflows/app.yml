@@ -52,8 +52,7 @@ jobs:
         working-directory: ./karavan/karavan-core
         run: npm ci
 
-      #  Build Karavan web app with public access
-      - name: Build application public
+      - name: Build application
         working-directory: ./karavan/karavan-web/karavan-app
         run: |
           mvn package -Dquarkus.profile=public -DskipTests \
@@ -64,29 +63,3 @@ jobs:
           -Dquarkus.container-image.username=${{ github.actor }} \
           -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.ref == 'refs/heads/main' }}
-
-      #  Build Karavan web app with basic authorization
-      # - name: Build application basic auth
-      #   working-directory: ./karavan/karavan-web/karavan-app
-      #   run: |
-      #     mvn package -Dquarkus.profile=basic -DskipTests \
-      #     -Dquarkus.quinoa.package-manager-install=false \
-      #     -Dquarkus.container-image.build=true \
-      #     -Dquarkus.container-image.push=true \
-      #     -Dquarkus.container-image.image=${{ env.REGISTRY }}/${GITHUB_REPOSITORY}-basic:${{ env.TAG }} \
-      #     -Dquarkus.container-image.username=${{ github.actor }} \
-      #     -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }}
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-
-      #  Build Karavan web app with oidc authorization
-      # - name: Build application oidc
-      #   working-directory: ./karavan/karavan-web/karavan-app
-      #   run: |
-      #     mvn package -Dquarkus.profile=oidc -DskipTests \
-      #     -Dquarkus.quinoa.package-manager-install=false \
-      #     -Dquarkus.container-image.build=true \
-      #     -Dquarkus.container-image.push=true \
-      #     -Dquarkus.container-image.image=${{ env.REGISTRY }}/${GITHUB_REPOSITORY}-oidc:${{ env.TAG }} \
-      #     -Dquarkus.container-image.username=${{ github.actor }} \
-      #     -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }}
-      #   if: ${{ github.ref == 'refs/heads/main' }}

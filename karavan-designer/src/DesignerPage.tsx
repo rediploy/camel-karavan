@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {
     Toolbar,
     ToolbarContent,
@@ -26,7 +26,7 @@ import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 import DownloadImageIcon from "@patternfly/react-icons/dist/esm/icons/image-icon";
 import {KaravanDesigner} from "./designer/KaravanDesigner";
 import {EventBus} from "./designer/utils/EventBus";
-import { useIntegrationStore } from './designer/DesignerStore';
+import {IntegrationFile} from "karavan-core/lib/model/IntegrationDefinition";
 
 interface Props {
     name: string,
@@ -38,11 +38,6 @@ interface Props {
 export const DesignerPage = (props: Props) => {
 
     const [yaml, setYaml] = useState<string>(props.yaml);
-
-    useEffect(() => {
-        console.log("DesignerPage")
-        // setYaml();
-    }, []);
 
     function save(filename: string, yaml: string, propertyOnly: boolean) {
         setYaml(yaml);
@@ -83,6 +78,10 @@ export const DesignerPage = (props: Props) => {
                 ]}
                 onSavePropertyPlaceholder={(key, value) => console.log("onSavePropertyPlaceholder", key, value)}
                 beans={[]}
+                onInternalConsumerClick={(uri, name, routeId) => {
+                    console.log("onInternalConsumerClick", uri, name, routeId)
+                }}
+                files={[new IntegrationFile("demo.camel.yaml", yaml)]}
             />
         )
     }

@@ -26,8 +26,8 @@ import { TemplateApi } from "./core/api/TemplateApi";
 import { EventBus } from "./designer/utils/EventBus";
 import { KnowledgebasePage } from "./knowledgebase/KnowledgebasePage";
 import { TopologyTab } from "./topology/TopologyTab";
-import { IntegrationFile } from "./topology/TopologyStore";
 import {RegistryBeanDefinition} from "core/model/CamelDefinition";
+import { IntegrationFile } from "core/model/IntegrationDefinition";
 
 interface Props {
   dark: boolean
@@ -72,7 +72,6 @@ class App extends React.Component<Props, State> {
   };
 
   saveScheduledChanges = () => {
-    console.log("saveScheduledChanges", this.state.active);
     if (this.state.active && this.state.hasChanges) {
       this.save(this.state.relativePath, this.state.scheduledYaml, false);
     }
@@ -233,6 +232,10 @@ class App extends React.Component<Props, State> {
             propertyPlaceholders={this.state.propertyPlaceholders}
             onSavePropertyPlaceholder={(key, value) => this.savePropertyPlaceholder(key, value)}
             beans={this.state.beans}
+            onInternalConsumerClick={(uri, name, routeId) => {
+              vscode.postMessage({ command: 'internalConsumerClick', uri: uri, name: name, routeId: routeId });
+            }}
+            files={this.state.files.map(f => new IntegrationFile(f.name, f.code))}
           />
         }
         {loaded && page === "knowledgebase" && <KnowledgebasePage dark={dark} />}

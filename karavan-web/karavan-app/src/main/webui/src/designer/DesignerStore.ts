@@ -22,6 +22,7 @@ import {shallow} from "zustand/shallow";
 import {RegistryBeanDefinition} from "karavan-core/lib/model/CamelDefinition";
 import { temporal } from 'zundo';
 import isDeepEqual from 'fast-deep-equal';
+import {IntegrationFile} from "karavan-core/lib/model/IntegrationDefinition";
 
 interface IntegrationState {
     integration: Integration;
@@ -29,6 +30,9 @@ interface IntegrationState {
     setIntegration: (integration: Integration, propertyOnly: boolean) => void;
     propertyOnly: boolean;
     reset: () => void;
+    files: IntegrationFile []
+    setFiles: (files: IntegrationFile []) => void
+    resetFiles: (files: IntegrationFile []) => void
 }
 
 export const useIntegrationStore = createWithEqualityFn<IntegrationState>()(
@@ -49,13 +53,23 @@ export const useIntegrationStore = createWithEqualityFn<IntegrationState>()(
         },
         reset: () => {
             set({integration: Integration.createNew("demo", "plain"), json: '{}', propertyOnly: false});
+        },
+        files: [],
+        setFiles: (files: IntegrationFile []) => {
+            set((state: IntegrationState) => {
+                return {files: files};
+            });
+        },
+        resetFiles: (files: IntegrationFile []) => {
+            set((state: IntegrationState) => {
+                return {files: [...files]};
+            });
         }
     }), {
         equality: (pastState, currentState) =>
         isDeepEqual(pastState, currentState)
     }),
     shallow);
-
 
 interface SelectorStateState {
     showSelector: boolean;
