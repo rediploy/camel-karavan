@@ -99,7 +99,7 @@ export const DesignerPage = (props: Props) => {
                     <FlexItem>
                         <Toolbar id="toolbar-group-types">
                             <ToolbarContent>
-                                                          <ToolbarItem>
+                                <ToolbarItem>
                                     <Tooltip content="Download YAML" position={"bottom"}>
                                         <Button variant="primary" icon={<DownloadIcon/>} onClick={e => download()}>
                                             YAML
@@ -113,7 +113,7 @@ export const DesignerPage = (props: Props) => {
                                             Image
                                         </Button>
                                     </Tooltip>
-                                </ToolbarItem>                 
+                                </ToolbarItem>
                             </ToolbarContent>
                         </Toolbar>
                     </FlexItem>
