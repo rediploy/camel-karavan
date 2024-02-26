@@ -45,6 +45,7 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
 import org.jboss.logging.Logger;
 
+import java.io.StringReader;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -437,6 +438,36 @@ public class ProjectService implements HealthCheck {
         List<ProjectFile> files = karavanCacheService.getProjectFiles(Project.Type.services.name());
         Optional<ProjectFile> file = files.stream().filter(f -> f.getName().equals(DEV_SERVICES_FILENAME)).findFirst();
         return file.orElse(new ProjectFile()).getCode();
+    }
+
+    public String getApplicationProperties(String projectId) {
+        List<ProjectFile> files = karavanCacheService.getProjectFiles(projectId);
+        Optional<ProjectFile> file = files.stream().filter(f -> f.getName().equals(APPLICATION_PROPERTIES_FILENAME)).findFirst();
+        return file.orElse(new ProjectFile()).getCode();
+    }
+
+    public Map<String, String> getContainerProperties(String projectId) {
+
+        String propertiesText = getApplicationProperties(projectId);
+        
+        Properties properties = new Properties();
+        try {
+            properties.load(new StringReader(propertiesText));
+        } catch (Exception e) {
+            throw new RuntimeException("unable to parse " + APPLICATION_PROPERTIES_FILENAME, e);
+        }
+
+        String targetKeys = "camel.karavan." + (ConfigService.inKubernetes() ? "kubernetes" : "docker") + ".container.";
+
+        Map<String, String> propertiesMap = new HashMap<>();
+        for (String key : properties.stringPropertyNames()) {
+            if (key.startsWith(targetKeys)) {
+                propertiesMap.put(key.replace(targetKeys, ""),
+                        properties.getProperty(key));
+            }
+        }
+
+        return propertiesMap;
     }
 
     public void setProjectImage(String projectId, JsonObject data) throws Exception {

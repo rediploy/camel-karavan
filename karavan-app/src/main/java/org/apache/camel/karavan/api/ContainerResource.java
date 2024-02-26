@@ -123,7 +123,8 @@ public class ContainerResource {
                 labels.put(LABEL_TYPE, ContainerStatus.ContainerType.devservice.name());
                 labels.put(LABEL_CAMEL_RUNTIME, CamelRuntime.CAMEL_MAIN.getValue());
                 labels.put(LABEL_PROJECT_ID, projectId);
-                dockerService.createContainerFromCompose(dockerComposeService, labels, needPull(command));
+                dockerService.createContainerFromCompose(dockerComposeService, labels, needPull(command),
+                        projectService.getContainerProperties(projectId));
                 dockerService.runContainer(dockerComposeService.getContainer_name());
             }
         } else if (Objects.equals(type, ContainerStatus.ContainerType.project.name())) {
@@ -133,7 +134,8 @@ public class ContainerResource {
                 labels.put(LABEL_TYPE, ContainerStatus.ContainerType.project.name());
                 labels.put(LABEL_CAMEL_RUNTIME, CamelRuntime.CAMEL_MAIN.getValue());
                 labels.put(LABEL_PROJECT_ID, projectId);
-                dockerService.createContainerFromCompose(dockerComposeService, labels, needPull(command));
+                dockerService.createContainerFromCompose(dockerComposeService, labels, needPull(command),
+                        projectService.getContainerProperties(projectId));
                 dockerService.runContainer(dockerComposeService.getContainer_name());
             }
         } else if (Objects.equals(type, ContainerStatus.ContainerType.devmode.name())) {

@@ -34,6 +34,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.apache.camel.karavan.code.CodeService;
 import org.apache.camel.karavan.service.KaravanCacheService;
+import org.apache.camel.karavan.service.ProjectService;
 import org.apache.camel.karavan.model.ContainerStatus;
 import org.apache.camel.karavan.model.Project;
 import org.apache.camel.karavan.service.ConfigService;
@@ -66,6 +67,9 @@ public class KubernetesService implements HealthCheck {
 
     @Inject
     CodeService codeService;
+    
+    @Inject
+    ProjectService projectService;
 
     private String namespace;
 
@@ -180,7 +184,8 @@ public class KubernetesService implements HealthCheck {
             }
             boolean hasDockerConfigSecret = hasDockerConfigSecret();
             List<Tuple3<String, String, String>> envMappings =  codeService.getBuilderEnvMapping();
-            Pod pod = getBuilderPod(containerName, env, labels, envMappings, hasDockerConfigSecret);
+            Pod pod = getBuilderPod(containerName, env, labels, envMappings, hasDockerConfigSecret,
+                    projectService.getContainerProperties(project.getProjectId()));
             Pod result = client.resource(pod).create();
 
             LOGGER.info("Created pod " + result.getMetadata().getName());
@@ -227,7 +232,11 @@ public class KubernetesService implements HealthCheck {
     }
 
     private Pod getBuilderPod(String name, List<String> env, Map<String, String> labels,
-                              List<Tuple3<String, String, String>> envMappings, boolean hasDockerConfigSecret) {
+                              List<Tuple3<String, String, String>> envMappings, boolean hasDockerConfigSecret,
+                              Map<String, String> containerResources ) {
+        
+        ResourceRequirements resources = getResourceRequirements(containerResources);
+
         List<EnvVar> envVars = new ArrayList<>();
         env.stream().map(s -> s.split("=")).filter(s -> s.length > 0).forEach(parts -> {
             String varName = parts[0];
@@ -276,6 +285,7 @@ public class KubernetesService implements HealthCheck {
                 .withEnv(envVars)
                 .withCommand("/bin/sh", "-c", "/karavan/builder/build.sh")
                 .withVolumeMounts(volumeMounts)
+                .withResources(resources)
                 .build();
 
         List<Volume> volumes = new ArrayList<>();
@@ -427,8 +437,7 @@ public class KubernetesService implements HealthCheck {
             }
             Pod old = client.pods().inNamespace(getNamespace()).withName(name).get();
             if (old == null) {
-                Map<String, String> containerResources = CodeService.DEFAULT_CONTAINER_RESOURCES;
-                Pod pod = getDevModePod(name, jBangOptions, containerResources, labels);
+                Pod pod = getDevModePod(name, jBangOptions, projectService.getContainerProperties(project.getProjectId()), labels);
                 Pod result = client.resource(pod).createOrReplace();
                 copyFilesToContainer(result, files, "/karavan/code");
                 LOGGER.info("Created pod " + result.getMetadata().getName());

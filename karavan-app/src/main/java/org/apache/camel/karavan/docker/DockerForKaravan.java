@@ -23,6 +23,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.camel.karavan.model.ContainerStatus;
 import org.apache.camel.karavan.model.Project;
+import org.apache.camel.karavan.service.ProjectService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -42,6 +43,9 @@ public class DockerForKaravan {
 
     @ConfigProperty(name = "karavan.maven.cache")
     Optional<String> mavenCache;
+
+    @Inject
+    ProjectService projectService;
 
     @Inject
     DockerService dockerService;
@@ -70,7 +74,8 @@ public class DockerForKaravan {
                         LABEL_PROJECT_ID, projectId,
                         LABEL_CAMEL_RUNTIME, CamelRuntime.CAMEL_MAIN.getValue()
                 ),
-                volumes, null, RestartPolicy.noRestart(), false);
+                volumes, null, RestartPolicy.noRestart(), false, 
+                projectService.getContainerProperties(projectId));
 
     }
 
@@ -96,7 +101,7 @@ public class DockerForKaravan {
                         LABEL_PROJECT_ID, project.getProjectId(),
                         LABEL_TAG, tag
                 ),
-                volumes, null,RestartPolicy.noRestart(), false, "/karavan/builder/build.sh");
+                volumes, null,RestartPolicy.noRestart(), false, Map.of() , "/karavan/builder/build.sh");
     }
 
     private Map<String,String> getMavenVolumes(){

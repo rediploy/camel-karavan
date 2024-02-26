@@ -170,21 +170,21 @@ public class DockerService extends DockerServiceUtils {
         return stats;
     }
 
-    public Container createContainerFromCompose(DockerComposeService compose, ContainerStatus.ContainerType type, Boolean pull, String... command) throws InterruptedException {
-        return createContainerFromCompose(compose, type, Map.of(), pull, command);
+    public Container createContainerFromCompose(DockerComposeService compose, ContainerStatus.ContainerType type, Boolean pull, Map<String, String> containerProperties, String... command) throws InterruptedException {
+        return createContainerFromCompose(compose, type, pull, containerProperties, command);
     }
 
-    public Container createContainerFromCompose(DockerComposeService compose, ContainerStatus.ContainerType type, Map<String, String> volumes, Boolean pullAlways, String... command) throws InterruptedException {
+    public Container createContainerFromCompose(DockerComposeService compose, ContainerStatus.ContainerType type, Map<String, String> volumes, Boolean pullAlways, Map<String, String> containerProperties, String... command) throws InterruptedException {
         Map<String,String> labels = new HashMap<>();
         labels.put(LABEL_TYPE, type.name());
-        return createContainerFromCompose(compose, labels, volumes, pullAlways, command);
+        return createContainerFromCompose(compose, labels, volumes, pullAlways, containerProperties, command);
     }
 
-    public Container createContainerFromCompose(DockerComposeService compose, Map<String, String> labels, Boolean pullAlways, String... command) throws InterruptedException {
-        return createContainerFromCompose(compose, labels, Map.of(), pullAlways, command);
+    public Container createContainerFromCompose(DockerComposeService compose, Map<String, String> labels, Boolean pullAlways, Map<String, String> containerProperties, String... command) throws InterruptedException {
+        return createContainerFromCompose(compose, labels, Map.of(), pullAlways, containerProperties, command);
     }
 
-    public Container createContainerFromCompose(DockerComposeService compose, Map<String, String> labels, Map<String, String> volumes, Boolean pullAlways, String... command) throws InterruptedException {
+    public Container createContainerFromCompose(DockerComposeService compose, Map<String, String> labels, Map<String, String> volumes, Boolean pullAlways, Map<String, String> containerProperties, String... command) throws InterruptedException {
         List<Container> containers = findContainer(compose.getContainer_name());
         if (containers.isEmpty()) {
             HealthCheck healthCheck = getHealthCheck(compose.getHealthcheck());
@@ -206,7 +206,7 @@ public class DockerService extends DockerServiceUtils {
             }
 
             return createContainer(compose.getContainer_name(), compose.getImage(),
-                    env, compose.getPortsMap(), healthCheck, labels, volumes, networkName, restartPolicy, pullAlways, command);
+                    env, compose.getPortsMap(), healthCheck, labels, volumes, networkName, restartPolicy, pullAlways, containerProperties, command);
 
         } else {
             LOGGER.info("Compose Service already exists: " + containers.get(0).getId());
@@ -222,7 +222,7 @@ public class DockerService extends DockerServiceUtils {
     public Container createContainer(String name, String image, List<String> env, Map<Integer, Integer> ports,
                                      HealthCheck healthCheck, Map<String, String> labels,
                                      Map<String, String> volumes, String network, RestartPolicy restartPolicy,
-                                     boolean pullAlways,
+                                     boolean pullAlways, Map<String, String> containerProperties, 
                                      String... command) throws InterruptedException {
         List<Container> containers = findContainer(name);
         if (containers.isEmpty()) {
@@ -245,11 +245,16 @@ public class DockerService extends DockerServiceUtils {
             if (Objects.equals(labels.get(LABEL_PROJECT_ID), ContainerStatus.ContainerType.build.name())) {
                 mounts.add(new Mount().withType(MountType.BIND).withSource("/var/run/docker.sock").withTarget("/var/run/docker.sock"));
             }
-            createContainerCmd.withHostConfig(new HostConfig()
-                            .withRestartPolicy(restartPolicy)
+
+            HostConfig hostConfig = new HostConfig()
+                    .withRestartPolicy(restartPolicy)
                     .withPortBindings(portBindings)
                     .withMounts(mounts)
-                    .withNetworkMode(network != null ? network : networkName));
+                    .withNetworkMode(network != null ? network : networkName);
+
+            containerProperties.forEach((key, value)-> DockerProperty.get(key).setValue(hostConfig, value));
+
+            createContainerCmd.withHostConfig(hostConfig);
 
             CreateContainerResponse response = createContainerCmd.exec();
             LOGGER.info("Container created: " + response.getId());
